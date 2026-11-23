@@ -1,0 +1,1672 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<base target="_top">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#16191d">
+<title>Hooldus</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Hooldus">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{
+  --bg:#eceee9;--card:#fff;--ink:#16191d;--mute:#5d6671;--line:#d8dcdf;--soft:#f4f5f2;
+  --in:#fff3b8;--inb:#cf9f00;--ok:#1d7a43;--okbg:#e1f2e6;--warn:#a85f00;--warnbg:#ffeccc;
+  --hot:#bd2229;--hotbg:#fde2e2;--nav:#16191d;--navink:#fff;--navmute:#8f98a2;
+  --c1:#3e464f;--c1t:#eceef2;--c2:#007f8c;--c2t:#e0f3f5;--c3:#724c99;--c3t:#f1ebf7;
+  --r:14px;--alarm:#c4161c;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#0d1012;--card:#171b1f;--ink:#e7eaed;--mute:#9aa3ad;--line:#2a3036;--soft:#1d2226;
+    --in:#3b3313;--inb:#e3b82c;--ok:#52c585;--okbg:#13301e;--warn:#f1a640;--warnbg:#3b2a0f;
+    --hot:#ff6d6d;--hotbg:#3e1618;--nav:#050607;--navink:#fff;--navmute:#7d8690;
+    --c1:#aab5c1;--c1t:#1f252b;--c2:#38c2ce;--c2t:#0f2a2d;--c3:#b897e0;--c3t:#251d31;
+    color-scheme:dark;
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  -webkit-text-size-adjust:100%;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+.num,.tm,.cd,.clock{font-variant-numeric:tabular-nums}
+a{color:inherit}
+
+/* päis */
+header{position:sticky;top:0;z-index:20;background:var(--nav);color:var(--navink);
+  padding:calc(8px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px),calc((100% - 640px)/2)) 8px max(14px,env(safe-area-inset-left,0px),calc((100% - 640px)/2))}
+.hrow{display:flex;align-items:center;gap:10px}
+.ralli{flex:1;min-width:0;font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.clock{font-size:20px;font-weight:700;letter-spacing:.5px}
+.bell{border:0;background:transparent;color:var(--navink);font-size:20px;padding:4px 2px;opacity:.55}
+.bell.on{opacity:1}
+.chips{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1.5px solid #4a525b;background:transparent;color:var(--navink);border-radius:99px;
+  padding:5px 12px;font-size:14px;font-weight:600;white-space:nowrap;min-height:36px}
+.chip.on{background:var(--navink);color:var(--nav);border-color:var(--navink)}
+.chip .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+.status{font-size:12px;color:var(--navmute);margin-top:6px;min-height:16px}
+.status.bad{color:#ff8a8a;font-weight:700}
+.status.pend{color:#f1c86a}
+
+main{padding:12px max(12px,env(safe-area-inset-right,0px)) calc(92px + env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px));
+  max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+
+/* alumine menüü */
+nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--nav);display:flex;
+  padding:6px max(6px,env(safe-area-inset-right,0px),calc((100% - 640px)/2)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px),calc((100% - 640px)/2))}
+nav button{flex:1;border:0;background:transparent;color:var(--navmute);display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:6px 0;font-size:12px;font-weight:600;border-radius:10px}
+nav button .ic{font-size:21px;line-height:1}
+nav button.on{color:var(--navink);background:#ffffff14}
+
+/* kaardid */
+.card{background:var(--card);border-radius:var(--r);overflow:hidden;overflow:clip;box-shadow:0 1px 2px #0000000f}
+.pad{padding:14px 16px}
+.lbl{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.mute{color:var(--mute)}
+.small{font-size:14px}
+.h2{font-size:13px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:10px 4px -4px}
+
+/* sõit */
+.trip{border-left:6px solid var(--ink)}
+.trip .big{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-top:2px}
+.trip .lahku{font-size:30px;font-weight:800;letter-spacing:-.5px}
+.trip .cd{font-size:44px;font-weight:800;line-height:1.05;letter-spacing:-1px}
+.trip .cdl{font-size:14px;color:var(--mute);font-weight:600}
+.tasks{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-weight:600}
+.tasks li{display:flex;gap:8px;align-items:baseline}
+.route{margin-top:8px;font-size:15px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:12px;
+  padding:12px 16px;font-weight:700;font-size:16px;text-decoration:none;min-height:48px}
+.btn.waze{background:#33ccff;color:#05202b;margin-top:12px;width:100%}
+.btn.dark{background:var(--ink);color:var(--card)}
+.btn.ghost{background:var(--soft);color:var(--ink);border:1px solid var(--line)}
+.then{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);font-size:14px;color:var(--mute)}
+.u10{background:var(--warnbg)!important}
+.u10 .cd{color:var(--warn)}
+.u5{background:var(--hotbg)!important}
+.u5 .cd{color:var(--hot)}
+.u0{background:var(--alarm)!important;color:#fff!important}
+.u0 .cd,.u0 .mute,.u0 .cdl,.u0 .lbl{color:#fff!important}
+@keyframes pulse{50%{opacity:.55}}
+.u0 .cd{animation:pulse 1s infinite}
+
+/* auto kaart */
+.car{border-top:6px solid var(--cc)}
+.car .chead{background:var(--ct);padding:10px 16px;display:flex;align-items:center;gap:10px}
+.car .cnr{font-size:22px;font-weight:900;color:var(--cc)}
+.car .cname{font-weight:700;flex:1;min-width:0}
+.car .cname small{display:block;font-weight:500;color:var(--mute);font-size:13px}
+.state{padding:12px 16px 4px}
+.state .st{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--cc)}
+.state .sv{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.state .stime{font-size:22px;font-weight:800}
+.state .cd{font-size:30px;font-weight:800}
+.state.run{background:var(--ct)}
+.where{padding:2px 16px 10px;font-size:14px;color:var(--mute)}
+.svc{border-top:1px solid var(--line);padding:12px 16px;display:flex;flex-direction:column;gap:10px}
+.svhead{display:flex;align-items:center;gap:10px}
+.svhead .t{flex:1;min-width:0}
+.svhead .t b{font-size:17px}
+.done-btn{border:2px solid var(--ok);background:transparent;color:var(--ok);border-radius:12px;padding:8px 12px;font-weight:800;min-height:44px;white-space:nowrap}
+.done-btn.on{background:var(--ok);color:#fff}
+.lights{border-radius:10px;padding:10px 12px;font-weight:900;font-size:17px;background:var(--warnbg);color:var(--warn);letter-spacing:.02em}
+.line{display:flex;gap:10px;align-items:flex-start;font-size:15px}
+.line .i{flex:none;width:22px;text-align:center}
+.warnline{background:var(--warnbg);color:var(--warn);border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px}
+.logs{display:flex;flex-direction:column;gap:6px}
+.logitem{display:flex;gap:10px;align-items:flex-start;background:var(--soft);border-radius:10px;padding:8px 10px}
+.logitem .tx{flex:1;min-width:0;overflow-wrap:break-word;hyphens:auto}
+.logitem .meta{font-size:12px;color:var(--mute)}
+.logitem.ok .tx{text-decoration:line-through;color:var(--mute)}
+.cb{flex:none;width:40px;height:40px;border-radius:9px;border:2px solid var(--mute);background:var(--card);
+  display:grid;place-items:center;font-weight:900;color:#fff;font-size:18px;padding:0}
+.cb.on{background:var(--ok);border-color:var(--ok)}
+.press{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.press .pl{font-weight:700;flex:1 1 100%}
+.field{display:flex;align-items:center;gap:6px}
+.inp{background:var(--in);border:2px solid var(--inb);border-radius:10px;padding:8px 10px;min-height:44px;outline:none;width:100%}
+.inp:focus{box-shadow:0 0 0 3px #cf9f0040}
+.inp.n{width:74px;text-align:center;font-weight:800;font-size:18px}
+textarea.inp{resize:vertical;min-height:64px}
+.save{background:var(--inb);color:#1b1500;border:0;border-radius:10px;font-weight:800;padding:0 14px;min-height:44px}
+.save[hidden]{display:none}
+.linkbtn{border:0;background:transparent;color:var(--cc);font-weight:700;padding:4px 0;text-align:left;min-height:40px}
+
+/* kõik hooldused */
+.slist{display:flex;flex-direction:column}
+.srow{display:flex;align-items:center;gap:10px;padding:9px 14px;border-top:1px solid var(--line);font-size:15px}
+.srow:first-child{border-top:0}
+.srow .bar{width:5px;align-self:stretch;border-radius:3px;background:var(--cc)}
+.srow .n{font-weight:900;color:var(--cc);width:28px}
+.srow .s{flex:1;min-width:0}
+.srow.past{opacity:.5}
+.srow.now{background:var(--ct)}
+.pill{font-size:12px;font-weight:800;border-radius:99px;padding:2px 8px;white-space:nowrap}
+.pill.ok{background:var(--okbg);color:var(--ok)}
+.pill.run{background:var(--cc);color:var(--card)}
+.pill.next{background:var(--ink);color:var(--card)}
+
+/* ajakava */
+.seg{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:var(--hh,96px);z-index:3;background:var(--bg);margin:-12px 0 -4px;padding:10px 0 8px}
+.seg button{border:2px solid var(--cc);background:var(--card);color:var(--cc);border-radius:99px;padding:6px 14px;font-weight:800}
+.seg button.on{background:var(--cc);color:var(--card)}
+.sched{display:flex;flex-direction:column}
+.card.sched{overflow:visible}   /* overflow:hidden teeks kaardist kerimisala ja kleepuv päevapäis nihkuks kaardi sisse */
+.sched>:first-child{border-radius:var(--r) var(--r) 0 0}
+.sched>:last-child{border-radius:0 0 var(--r) var(--r)}
+.day{background:var(--ink);color:var(--card);padding:8px 14px;font-weight:800;font-size:13px;letter-spacing:.04em;position:sticky;top:calc(var(--hh,96px) + var(--sh,0px));z-index:2}
+.srw{display:grid;grid-template-columns:52px 46px 1fr;gap:8px;padding:9px 12px;border-top:1px solid var(--line);align-items:start}
+.srw .tm{font-weight:800}
+.srw .ak{font-weight:700;color:var(--mute);font-size:14px}
+.srw .ms{min-width:0;overflow-wrap:break-word;hyphens:auto}
+.srw .ms small{display:block;color:var(--mute);font-size:13px}
+.srw.SS .ms{font-weight:800}
+.srw.SERVICE{background:var(--ct)}
+.srw.SERVICE .ms{font-weight:700;color:var(--cc)}
+.srw.RZ{background:var(--warnbg)}
+.srw.RZ .ms{color:var(--warn);font-weight:700}
+.srw.PF .ms{font-weight:700}
+.srw.past{opacity:.45}
+.srw.next{outline:3px solid var(--cc);outline-offset:-3px;opacity:1}
+.tmb{border:0;background:transparent;padding:0;font:inherit;font-weight:800;color:inherit;text-decoration:underline dotted 1.5px;text-decoration-color:var(--mute);text-underline-offset:4px;text-align:left;min-height:40px;min-width:48px}
+.tmb .ed{font-size:12px;color:var(--warn);margin-left:2px}
+.srw .plan{display:block;font-size:11px;color:var(--mute);font-weight:600}
+.aegedit{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--in);border:2px solid var(--inb);border-radius:10px;padding:10px;margin-top:6px}
+.aegedit .tin{display:flex;align-items:center;gap:4px}
+.aegedit input{font-size:22px;font-weight:800;min-height:44px;width:92px;text-align:center;border-radius:8px;border:1px solid var(--inb);padding:4px 6px;background:var(--card);font-variant-numeric:tabular-nums}
+.adj{min-width:44px;min-height:44px;border-radius:8px;border:1px solid var(--inb);background:var(--card);font-weight:800;font-size:15px;padding:0 6px}
+.aegedit .small{flex:1 1 100%}
+.nextb{display:block;width:fit-content;margin-top:4px;background:var(--cc);color:var(--card);font-size:12px;font-weight:800;border-radius:99px;padding:2px 8px}
+
+/* info */
+.toc{display:flex;gap:6px;flex-wrap:wrap}
+.toc button{flex:none}
+.toc{position:sticky;top:var(--hh,96px);z-index:3;background:var(--bg);padding:4px 0}
+.toc button{border:1px solid var(--line);background:var(--card);border-radius:99px;padding:8px 10px;font-weight:700;font-size:14px}
+.toc button.on{background:var(--ink);color:var(--card);border-color:var(--ink)}
+.rowi{display:flex;gap:12px;align-items:center;padding:10px 14px;border-top:1px solid var(--line)}
+.rowi:first-child{border-top:0}
+.rowi .s{flex:1;min-width:0}
+.rowi.past{opacity:.45}
+.tel{font-weight:800;text-decoration:none;white-space:nowrap;background:var(--okbg);color:var(--ok);padding:11px 12px;border-radius:10px;display:inline-block}
+.wz{font-weight:800;text-decoration:none;white-space:nowrap;background:#33ccff;color:#05202b;padding:11px 12px;border-radius:10px;display:inline-block}
+dl{margin:0}
+dl div{padding:9px 14px;border-top:1px solid var(--line)}
+dl div:first-child{border-top:0}
+dt{font-weight:800}
+dd{margin:0;color:var(--mute);font-size:15px}
+.form{display:flex;flex-direction:column;gap:8px;padding:12px 14px;background:var(--soft)}
+.frow{display:flex;gap:8px}
+.frow > *{flex:1;min-width:0}
+select.inp{appearance:auto}
+.tg{border:2px solid var(--cc);background:transparent;color:var(--cc);border-radius:9px;padding:4px 8px;font-weight:800;min-width:46px;min-height:36px;font-size:14px}
+.tg.on{background:var(--cc);color:var(--card)}
+.kitem{display:flex;align-items:center;gap:8px;padding:8px 14px;border-top:1px solid var(--line)}
+.kitem .s{flex:1;min-width:0;overflow-wrap:break-word;hyphens:auto}
+.ksec{padding:10px 14px 6px;font-weight:800;font-size:13px;letter-spacing:.06em;text-transform:uppercase;background:var(--soft);border-top:1px solid var(--line)}
+.ksec small{display:block;text-transform:none;letter-spacing:0;font-weight:600;color:var(--mute)}
+.badge{font-size:12px;font-weight:800;border-radius:6px;padding:2px 6px;background:var(--soft);border:1px solid var(--line)}
+.oht{color:var(--hot);font-weight:800}
+.ki{display:block;font-size:13px;font-weight:600;margin-top:4px;color:var(--ink)}
+.ki.oht{color:var(--hot);font-weight:800}
+.ki .mute{font-weight:600}
+.kib{display:block;width:fit-content;margin-top:6px;border:1px dashed var(--line);background:transparent;color:var(--mute);border-radius:99px;padding:4px 12px;font-weight:700;font-size:13px;min-height:40px}
+.empty{padding:14px 16px;color:var(--mute)}
+
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:30;
+  background:var(--ink);color:var(--card);padding:10px 16px;border-radius:12px;font-weight:700;font-size:15px;max-width:92vw;
+  box-shadow:0 6px 20px #0004;transition:opacity .2s;opacity:0;pointer-events:none}
+#toast.show{opacity:1}
+#toast.bad{background:var(--alarm);color:#fff}
+#alarm{position:fixed;inset:0;z-index:40;background:var(--alarm);color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center}
+#alarm .a1{font-size:28px;font-weight:900}
+#alarm .a2{font-size:18px;font-weight:600}
+#alarm button{background:#fff;color:var(--alarm);border:0;border-radius:14px;padding:14px 26px;font-weight:900;font-size:18px}
+.loading{padding:40px 16px;text-align:center;color:var(--mute)}
+.svsum{border-top:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:10px;width:100%;background:transparent;border-left:0;border-right:0;border-bottom:0;text-align:left;font-size:14px}
+.svsum .s{flex:1;min-width:0;color:var(--mute)}
+.svsum .s b{color:var(--ink)}
+.svsum .go{flex:none;font-weight:800;color:var(--cc);white-space:nowrap}
+.svsum .wl{color:var(--warn);font-weight:800}
+.prestart{padding:0 16px 12px;display:flex;flex-direction:column;gap:6px}
+.prestart .warnline{font-size:15px}
+.hint{font-size:13px;color:var(--mute);padding:0 4px}
+.cbadge{flex:none;min-width:30px;text-align:center;font-size:13px;font-weight:900;border-radius:7px;padding:3px 5px;background:var(--cc);color:var(--card);align-self:flex-start;margin-top:4px}
+.logseg{display:flex;gap:6px;flex-wrap:wrap}
+.logseg button{flex:1 1 0;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:2px solid var(--cc);background:var(--card);color:var(--cc);border-radius:99px;padding:6px 8px;font-weight:800;min-height:40px}
+.logseg button.on{background:var(--cc);color:var(--card)}
+.tg.cbx{min-width:36px;width:36px;padding:0;font-size:18px}
+.kyb{display:block;width:fit-content;margin-top:6px;border:1px solid var(--inb);background:var(--in);color:var(--ink);border-radius:99px;padding:4px 12px;font-weight:700;font-size:13px;min-height:40px}
+.cb.pend{border-color:var(--line);background:transparent;font-size:16px}
+.cal{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.calb{flex:none;display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);text-decoration:none;font-size:16px;font-weight:800;padding:0 6px}
+.calb.on{border-color:var(--ok);color:var(--ok)}
+.calb.vana{border:2px solid var(--hot);color:var(--hot);background:var(--hotbg)}
+.calwarn{background:var(--hotbg);color:var(--hot);font-weight:800}
+.calwarn .rowi{border-top:1px solid var(--line)}
+.calbtns{display:flex;gap:8px;flex-wrap:wrap;flex:1 1 100%}
+.calbtns .btn{flex:1 1 140px}
+.artop{display:flex;gap:8px;align-items:center}
+.artop .tx{flex:1;min-width:0}
+.cal > div{flex:1 1 220px;min-width:0}
+.cal .btn{flex:none}
+/* signaalid */
+.sig{padding:12px 16px;display:flex;gap:10px;align-items:baseline;font-weight:900;font-size:19px;line-height:1.25}
+.sig .tx{flex:1;min-width:0;overflow-wrap:break-word}
+.sig .tx small{display:block;font-size:15px;font-weight:700;margin-top:2px}
+.sig .num{font-size:15px;font-weight:800;white-space:nowrap}
+.sig.ok{background:var(--okbg);color:var(--ok)}
+.sig.hot{background:var(--hotbg);color:var(--hot)}
+.sig.dnf{background:var(--alarm);color:#fff}
+.sig.tyh{background:var(--soft);color:var(--mute);text-decoration:none}
+.sig .tyhb{flex:none;border:2px solid currentColor;background:transparent;color:inherit;border-radius:10px;font-weight:900;font-size:14px;min-height:40px;padding:0 10px}
+.sig .nah{flex:1 1 100%;font-size:14px;font-weight:800;margin-top:6px}
+.sig .nahb{flex:1 1 100%;margin-top:8px;border:0;background:#fff;color:#000;border-radius:10px;font-weight:900;font-size:16px;min-height:48px}
+.sig .tyhb.k{background:#fff;color:var(--alarm);border-color:#fff}
+.sigb{border-top:1px solid var(--line);padding:10px 16px 12px;display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.sigb .pl{flex:1 1 100%;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute)}
+.sg{flex:1 1 auto;border:2px solid var(--sc);color:var(--sc);background:transparent;border-radius:10px;font-weight:900;min-height:44px;padding:0 6px;font-size:13px;white-space:nowrap}
+.sg.on{background:var(--sc);color:#fff}
+.sg.ok{--sc:var(--ok)}.sg.hot{--sc:var(--hot)}.sg.dnf{--sc:var(--alarm)}
+@media (prefers-color-scheme: dark){.sg.dnf{--sc:#ff6b6b}.sg.dnf.on{color:#1a0d0d}}
+.sig .geo{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.sig .geo a{flex:1 1 120px;text-align:center;background:#fff;color:#000;border-radius:10px;padding:10px 6px;font-size:15px;font-weight:900;text-decoration:none}
+.geol{font-size:14px;font-weight:700;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.geol.ok{color:var(--ok)}.geol.viga{color:var(--hot)}
+.sigform{flex:1 1 100%;display:flex;flex-direction:column;gap:8px;background:var(--soft);border-radius:10px;padding:10px;margin-top:4px}
+/* standardtööd, kütus */
+.chkg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:6px}
+.chkg .tg{min-height:40px;padding:4px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kyest{display:block;font-size:13px;color:var(--mute);font-weight:600;margin-top:4px}
+.kyest.low{color:var(--hot);font-weight:800}
+/* debriif */
+.dbs{padding:10px 16px;border-top:1px solid var(--line)}
+.dbs .lbl{margin-bottom:4px}
+.dbs ul{margin:0;padding-left:18px;font-size:14px}
+.dbs li{margin:2px 0;overflow-wrap:break-word}
+.dbs li.hot{color:var(--hot);font-weight:700}
+.dbs li.ok{color:var(--ok)}
+.dbbtn{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.dbbtn .btn{flex:1 1 140px}
+@media print{
+  header,nav,.toc,.dbbtn,#toast{display:none!important}
+  html,body{background:#fff;color:#000}
+  main{padding:0;max-width:none}
+  .card{box-shadow:none;border:1px solid #ccc;break-inside:avoid}
+  .dbs{break-inside:avoid}
+}
+.minu{padding:14px 16px}
+.minu .mb{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.minu .mb .btn{justify-content:flex-start;text-align:left}
+.minubar{display:flex;gap:8px;align-items:center;padding:8px 12px;font-size:14px;font-weight:700}
+.minubar .tx{flex:1;min-width:0}
+.minuft{text-align:center;margin:14px 0 4px}
+.minuft button{background:none;border:0;color:var(--mute);font-size:14px;font-weight:700;text-decoration:underline;min-height:40px}
+/* seaded */
+.sea{padding:12px 16px;border-top:1px solid var(--line)}
+.sea .lbl{margin-bottom:6px}
+.seag{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 10px}
+.seag label{display:flex;flex-direction:column;gap:3px;font-size:13px;font-weight:700;color:var(--mute);min-width:0}
+.seag label.lai{grid-column:1/-1}
+.seag .inp{color:var(--ink);font-weight:700}
+.seag .yh{font-weight:600;font-size:12px}
+.seaq{display:flex;gap:8px;flex-wrap:wrap}
+.seaq .btn{flex:1 1 140px}
+.seaso{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.seaso .small{flex:1 1 160px}
+.morebtn{border:0;border-top:1px solid var(--line);background:transparent;width:100%;padding:12px 14px;font-weight:700;color:var(--mute);text-align:left}
+</style>
+</head>
+<body>
+<header id="hdr">
+  <div class="hrow">
+    <div class="ralli" id="ralli">Hooldus</div>
+    <button class="bell" id="bell" data-act="heli" aria-label="Heli ja ekraan">🔕</button>
+    <div class="clock" id="clock">--:--</div>
+  </div>
+  <div class="chips" id="chips"></div>
+  <div class="status" id="status">Laen…</div>
+</header>
+<main id="main"><div class="loading">Laen andmeid…</div></main>
+<nav id="nav">
+  <button data-view="nyyd" class="on"><span class="ic">⏱</span>Nüüd</button>
+  <button data-view="ajakava"><span class="ic">📋</span>Ajakava</button>
+  <button data-view="logi"><span class="ic">📝</span>Logi</button>
+  <button data-view="info"><span class="ic">ℹ️</span>Info</button>
+</nav>
+<div id="cfg" data-k="" hidden></div>
+<div id="toast"></div>
+<div id="alarm" hidden></div>
+
+<script>window.HOOLDUS_PWA={"api":"https://script.google.com/macros/s/AKfycbyNBrLT01bUyKJPuUEWmnR2NAznLCGshwdVDUslmlXynrMGAUtZzK0TPNXGB0UhIWCI/exec"};</script>
+<script>
+// Apps Script asendab selle; kui fail avatakse otse (mitte /exec lingilt), jääb siia tekst ja server puudub.
+const VOTI_RAW = (document.getElementById('cfg') || {}).dataset ? document.getElementById('cfg').dataset.k || '' : '';
+// PWA (eraldi sait, tools/pwa.js): võti ja API aadress tulevad lingi #k=…&a=… osast (see ei lähe serverisse) ja jäävad telefoni meelde.
+const PWA = window.HOOLDUS_PWA || null;
+function pwaSeaded() {
+  const m = {}, ls = (k, v) => { try { if (v === undefined) return localStorage.getItem('hl_pwa_' + k) || ''; localStorage.setItem('hl_pwa_' + k, v); } catch (e) {} return ''; };
+  String(location.hash || '').replace(/^#/, '').split('&').forEach(p => {
+    const i = p.indexOf('=');
+    if (i > 0) { try { m[p.slice(0, i)] = decodeURIComponent(p.slice(i + 1)); } catch (e) {} }   // katkine %-kood ei peata rakendust
+  });
+  const k = m.k ? m.k.replace(/[^\w-]/g, '').slice(0, 40) : '';
+  // Teine API (#a=) ainult koos oma võtmega samas lingis: muidu saadaks võõra API link telefoni salvestatud võtme võõrale serverile.
+  // Ainult võtmega link (#k=) taastab vaikimisi API.
+  if (k) { ls('k', k); ls('api', m.a && /^[\w-]{20,}$/.test(m.a) ? 'https:' + '/' + '/script.google.com/macros/s/' + m.a + '/exec' : ''); }
+  if (m.k || m.a) { try { history.replaceState(null, '', location.pathname + location.search); } catch (e) {} }   // võti ei jää aadressiribale ega ajalukku
+  const sea = { voti: ls('k'), api: ls('api') || PWA.api, keelatud: false };
+  sea.unusta = () => { sea.keelatud = true; try { localStorage.removeItem('hl_pwa_k'); } catch (e) {} };   // tagasi lükatud võtit ei saadeta enam
+  return sea;
+}
+const PWA_SEA = PWA ? pwaSeaded() : null;
+const VOTI = PWA_SEA ? PWA_SEA.voti : VOTI_RAW.indexOf('<' + '?') === 0 ? '' : VOTI_RAW;
+
+/* ------------------------------------------------------------ olek */
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('hl_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem('hl_' + k, JSON.stringify(v)); } catch (e) {} }
+};
+let D = null, offset = 0, lastOk = 0, lastErr = '';
+let view = LS.get('view', 'nyyd'), filter = LS.get('filter', 'koik'), ajAuto = LS.get('ajAuto', null);
+// Minu auto: iga telefon valib oma auto (kaardilugeja) või „kõik“ (mehaanik). Avamisel on see ees, teisi saab vaadata.
+let minu = LS.get('minu', null), minuValik = false;
+if (minu) { filter = minu; if (minu !== 'koik') ajAuto = Number(minu); }
+let infoTab = LS.get('infoTab', 'soidud') === 'katsed' ? 'soidud' : LS.get('infoTab', 'soidud'), editAeg = null, editKy = null, logAuto = LS.get('logAuto', null), showPast = false, ideeLiik = 'Idee', sigOpen = null, dbTekst = null, editKatse = null, muudaKatse = null, kustutaKatse = null, logTab = LS.get('logTab', 'logi');
+const kal = LS.get('kal', {});
+let sigSeen = LS.get('sigSeen', 0);
+const sigMine = [];
+// selle telefoni saadetud signaalid (Tühista nupp ainult saatjal)
+const sigSaadetud = LS.get('sigSaadetud', []);
+const minuSignaal = x => sigSaadetud.some(m => m.nr === x.nr && m.sg === x.signaal && m.kus === x.kus && x.t >= m.at - 5 * MIN);
+let sigGeo = null, sigTyh = null, alarmSig = null;
+// saatja telefonis juba teatatud „mehaanikud nägid“ (nr|t)
+const nahtudTeada = LS.get('nahtudTeada', []);
+// Kinnitada saab mehaaniku telefon (★ kõik autod) või telefon, kus autot pole valitud; saatja ise ja teise auto kaardilugeja mitte.
+const saabKinnitada = x => !x.ootel && !x.nahtud && !x.tyh && x.signaal !== 'OK' && !minuSignaal(x) && (!minu || minu === 'koik');
+const sigShow = new Set();   // hoolduse ajal lahti tehtud signaaliriba   // { st: 'otsin' | 'ok' | 'viga', ll, tapsus, viga }
+const openSvc = new Set();
+let heli = false, wake = null, audio = null, nextB = Infinity, pending = false, scrollNext = true, focusAfter = null;
+const fired = new Set();
+const $ = s => document.querySelector(s);
+const now = () => Date.now() + offset;
+const MIN = 60000;
+
+const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '\x22': '&quot;', '\x27': '&#39;' };
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>\x22\x27]/g, c => ESC[c]); }
+
+let fmtT = null, fmtTs = null;
+function setTz(tz) {
+  try {
+    fmtT = new Intl.DateTimeFormat('et-EE', { timeZone: tz, hour: '2-digit', minute: '2-digit', hour12: false });
+    fmtTs = new Intl.DateTimeFormat('et-EE', { timeZone: tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  } catch (e) {
+    fmtT = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', hour12: false });
+    fmtTs = new Intl.DateTimeFormat('et-EE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
+  }
+}
+setTz('Europe/Tallinn');
+const hm = ms => ms ? fmtT.format(new Date(ms)) : '';
+function dur(ms) {
+  if (ms == null) return '';
+  if (ms < 0) ms = 0;
+  const s = Math.floor(ms / 1000), h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), ss = s % 60;
+  if (h === 0) return m + ':' + String(ss).padStart(2, '0');
+  return h + ' h ' + String(m).padStart(2, '0') + ' min';
+}
+function durLbl(ms) { return ms < 3600000 ? 'min : s pärast' : 'pärast'; }
+function durShort(ms) {
+  const m = Math.max(0, Math.round(ms / MIN));
+  if (m < 60) return m + ' min';
+  return Math.floor(m / 60) + ' h ' + String(m % 60).padStart(2, '0') + ' min';
+}
+
+/* ------------------------------------------------------------ server */
+// Iga päring kannab ralli tunnust (D.rid): server ei kirjuta vana ralli ootel muudatust uue ralli tabelisse.
+function call(fn, ...args) { return callR(D ? D.rid : '', fn, ...args); }
+function callR(rid, fn, ...args) {
+  return new Promise((res, rej) => {
+    const tm = setTimeout(() => rej('Ühendus aegus (timeout)'), 45000);
+    const ok = x => { clearTimeout(tm); res(x); }, bad = e => { clearTimeout(tm); rej(e); };
+    callRaw(fn, args, ok, bad, rid);
+  });
+}
+function callRaw(fn, args, res, rej, rid) {
+  const k = VOTI + (rid ? '|' + rid : '');
+  {
+    if (window.google && google.script && google.script.run) {
+      google.script.run.withSuccessHandler(res).withFailureHandler(e => rej(e && e.message ? e.message : String(e)))[fn](k, ...args);
+    } else if (PWA_SEA) {
+      if (!VOTI || PWA_SEA.keelatud) { rej('NOKEY'); return; }
+      // text/plain = „lihtne“ päring, brauser ei tee eelpäringut (CORS preflight); Apps Script suunab vastuse ümber, fetch järgib
+      fetch(PWA_SEA.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ fn: fn, args: [k, ...args] }), redirect: 'follow', cache: 'no-store' })
+        .then(r => r.text().then(t => {   // Google'i vealeht (HTML) või HTTP viga = ühenduse viga → transient, muudatus jääb järjekorda
+          if (!r.ok) throw new Error('Ühendus katkes (HTTP ' + r.status + ')');
+          try { return JSON.parse(t); } catch (e) { throw new Error('Ühendus: server vastas valesti'); }
+        }), e => { throw new Error('NetworkError: ' + (e && e.message || e)); })
+        .then(o => o && o.ok ? res(o.data) : rej(o && o.error || 'Tundmatu vastus'), e => rej(e && e.message || String(e)));
+    } else if (window.MOCK_CALL) {
+      window.MOCK_CALL(fn, [k, ...args]).then(res, rej);
+    } else rej('NOSERVER');
+  }
+}
+function apply(json, cached) {
+  D = JSON.parse(json);
+  if (cached) { offset = 0; lastOk = cached; }
+  else {
+    const diff = D.now - Date.now();
+    offset = Math.abs(diff) > 90000 ? diff : 0;
+    lastOk = Date.now(); lastErr = '';
+    LS.set('snap', { at: lastOk, json: json });
+  }
+  if (!cached && D.rid) {
+    const vana = LS.get('rid', '');
+    if (vana && vana !== D.rid) ralliVahetus();
+    LS.set('rid', D.rid);
+  }
+  setTz(D.tz || 'Europe/Tallinn');
+  if (filter !== 'koik' && !D.autod.some(a => String(a.koht) === filter)) filter = 'koik';
+  if (minu && minu !== 'koik' && !D.autod.some(a => String(a.koht) === minu)) { minu = null; LS.set('minu', null); }
+  if (!cached) sigCheck();
+  Q.forEach(overlay);
+  kOver();
+  render();
+}
+
+/* ---- ootel muudatused: salvestuvad telefoni ja saadetakse, kui levi on */
+let Q = LS.get('q', []), flushing = false;
+const saveQ = () => LS.set('q', Q);
+const transient = e => /network|http 0|connection|ühendus|timeout|timed out|unavailable|too many|lock|NOSERVER|fetch/i.test(String(e));
+function send(fn, args, msg) {
+  const op = { id: Date.now() * 1000 + Math.floor(Math.random() * 1000), fn: fn, args: args, msg: msg, at: now(), rid: D ? D.rid : '' };
+  Q.push(op); saveQ();
+  overlay(op); render();
+  flush();
+}
+function flush() {
+  if (flushing || !Q.length) return;
+  flushing = true;
+  const op = Q[0];
+  callR(op.rid || '', op.fn, ...op.args).then(j => {
+    Q.shift(); saveQ(); flushing = false;
+    apply(j);
+    toast(Q.length ? op.msg + ' · ootel veel ' + Q.length : op.msg || 'Salvestatud ✓');
+    flush();
+  }).catch(e => {
+    flushing = false;
+    if (transient(e)) { lastErr = 'Pole ühendust'; status(); toast('⏳ Pole levi — saadan ise, kui ühendus tuleb', true); }
+    else { Q.shift(); saveQ(); toast('Ei salvestunud: ' + String(e).replace(/^(Exception|Error):\s*/, ''), true); load(); flush(); }
+  });
+}
+/** Aktiivne ralli vahetus (püsirakendus): eelmise ralli ootel muudatused ja telefoni märkmed ei kehti enam. */
+function ralliVahetus() {
+  const n = Q.filter(op => op.rid && op.rid !== D.rid).length;
+  Q = Q.filter(op => !op.rid || op.rid === D.rid); saveQ();
+  sigSeen = 0; LS.set('sigSeen', 0);
+  tabKontroll = null; ajaluguKinnita = false;
+  sigSaadetud.length = 0; LS.set('sigSaadetud', []);
+  nahtudTeada.length = 0; LS.set('nahtudTeada', []);
+  Object.keys(kal).forEach(k => delete kal[k]); LS.set('kal', kal);
+  openSvc.clear(); Object.keys(kPend).forEach(k => { clearTimeout(kTimer[k]); delete kPend[k]; delete kTimer[k]; });
+  // autode kohad võivad uuel rallil olla teised → küsi uuesti, kelle telefon see on
+  minu = null; LS.set('minu', null); filter = 'koik'; LS.set('filter', filter); ajAuto = null; LS.set('ajAuto', null); logAuto = null; LS.set('logAuto', null);
+  view = 'nyyd'; LS.set('view', view);
+  setTimeout(() => toast('Uus ralli: ' + D.ralli + (n ? ' · ' + n + ' eelmise ralli ootel muudatust jäeti ära' : '')), 50);
+}
+/** Ootel muudatuse mõju kohe ekraanile (enne kui server kinnitab). */
+function overlay(op) {
+  if (!D) return;
+  const a = op.args;
+  try {
+    if (op.fn === 'setServiceDone') { const h = D.hooldused.find(x => x.rida === a[0]); if (h) { h.tehtud = a[1]; h.ootel = true; } }
+    else if (op.fn === 'setLogDone') { const l = (D.logid[a[0]] || []).find(x => x.rida === a[1]); if (l) { l.tehtud = a[2]; l.ootel = true; } }
+    else if (op.fn === 'setPressure') { const h = D.hooldused.find(x => x.rida === a[0]); if (h) { h.ees = a[1] === '' ? '' : Number(a[1]); h.taga = a[2] === '' ? '' : Number(a[2]); h.ootel = true; } }
+    else if (op.fn === 'addLog') {
+      const L = D.logid[a[0]] = D.logid[a[0]] || [];
+      const h = D.hooldused.find(x => x.koht === a[0] && x.valja && x.valja > op.at);
+      L.push({ rida: -op.id, t: op.at, aeg: 'ootel', tekst: a[1], tehtud: false, hooldus: h ? h.nimi : '', ootel: true });
+    }
+    else if (op.fn === 'setAeg') {
+      const r = (D.ajakavad[a[0]] || []).find(x => x.rida === a[1]);
+      if (r) { r.aeg = a[2] || r.plaan || r.aeg; r.muudetud = !!a[2] && a[2] !== r.plaan; r.ootel = true; }
+    }
+    else if (op.fn === 'setKaasa') { const x = D.kaasa.find(y => y.rida === a[0]); if (x) x.v[a[1] - 1] = a[2]; }
+    else if (op.fn === 'addKaasa') { D.kaasa.push({ rida: -op.id, nimi: a[0], yhine: false, v: [0, 1, 2].map(i => i < D.autod.length ? false : null), ootel: true }); }
+    else if (op.fn === 'addIdee') {
+      const x = car(a[0]);
+      if (x && D.arendus) D.arendus.read.unshift({ aeg: 'ootel', ralli: D.ralli, auto: autoNimi(x), nr: x.nr, liik: a[1], mida: a[2], staatus: 'Uus', otsus: '', ootel: true });
+    }
+    else if (op.fn === 'setKatse') { const x = D.katsed.find(y => y.rida === a[0]); if (x) { x.info = a[2]; x.oht = a[3]; x.ootel = true; } }
+    else if (op.fn === 'delKatse') { D.katsed = D.katsed.filter(y => y.rida !== a[0]); }
+    else if (op.fn === 'addKatse') { D.katsed.unshift({ aeg: 'ootel', nr: a[0], lk: a[1], info: a[2], oht: a[3], ootel: true }); }
+    else if (op.fn === 'addSignaal') { const x = car(a[0]); if (x) D.signaalid.unshift({ t: op.at, aeg: '', nr: x.nr, kus: a[1], signaal: a[2], tekst: a[3], ll: a[4] || '', tapsus: a[5] || '', ootel: true }); }
+    else if (op.fn === 'nahtudSignaal') { const x = (D.signaalid || []).find(y => y.nr === a[0] && Math.abs(y.t - a[1]) < 1500); if (x && !x.nahtud) x.nahtud = hm(op.at); }
+    else if (op.fn === 'tyhistaSignaal') { const x = (D.signaalid || []).find(y => y.nr === a[0] && Math.abs(y.t - a[1]) < 1500); if (x) x.tyh = 'tühistatud ' + hm(op.at); }
+    else if (op.fn === 'setKontroll') {
+      const h = D.hooldused.find(x => x.rida === a[0]);
+      if (h && Array.isArray(a[1])) { h.kontroll = a[1].slice(); h.ootel = true; }
+      else if (h) { h.kontroll = (h.kontroll || []).filter(m => m !== a[1]); if (a[2]) h.kontroll.push(a[1]); h.ootel = true; }
+    }
+    else if (op.fn === 'setSeaded') {
+      const v = a[1];
+      if (a[0] === 0 && D.seaded) Object.keys(v).forEach(m => { if (m in D.seaded) D.seaded[m] = Number(String(v[m]).replace(',', '.')); else if (D.seaded.soit) D.seaded.soit[m] = Number(String(v[m]).replace(',', '.')); });
+      else { const x = car(a[0]); if (x) Object.keys(v).forEach(m => { x[m] = SEA_TEKST.indexOf(m) >= 0 ? v[m] : Number(String(v[m]).replace(',', '.')); }); }
+    }
+    else if (op.fn === 'setKytus') { const k = D.kytus.find(x => x.rz === a[1]); if (k) { k.tangitud[a[0] - 1] = a[2] === '' ? '' : Number(a[2]); k.ootel = true; } }
+  } catch (e) {}
+}
+let loading = 0;
+function load() {
+  if (loading && Date.now() - loading < 60000) return;
+  loading = Date.now();
+  call('getData').then(j => { apply(j); flush(); }).catch(e => {
+    if (e === 'NOSERVER') {
+      $('#main').innerHTML = '<section class="card pad"><b>See on ainult rakenduse fail, mitte rakendus.</b><p class="small mute">Fail töötab alles siis, kui see on kleebitud tabeli Apps Scripti projekti nimega „Index“ ja avatud juurutuse lingilt, mis lõpeb <b>/exec</b>. Vaata paigaldusjuhendit.</p></section>';
+      lastErr = 'Server puudub — ava /exec lingilt';
+    } else if (e === 'NOKEY' || (PWA_SEA && /Vale võti/.test(String(e)))) {
+      if (e !== 'NOKEY') PWA_SEA.unusta();   // võti vahetati: vana ei kehti, järgmine avamine küsib uut linki
+      // Avaekraani rakendusel pole aadressiriba (iPhone hoiab seal eraldi salvestust): võtme saab kleepida siia. Korduv load ei kustuta poolelt sisestust.
+      if (!D && !$('#pwaK')) $('#main').innerHTML = `<section class="card pad"><b>${e === 'NOKEY' ? 'Ava rakendus meeskonnalt saadud lingiga.' : 'Võti on vale või vahetatud.'}</b>
+        <p class="small mute">Kleebi siia meeskonnalt saadud link (…/#k=võti) või ainult võti. Telefon jätab selle meelde.</p>
+        <input class="inp" id="pwaK" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Link või võti" aria-label="Link või võti">
+        <div class="dbbtn"><button class="btn dark" data-act="pwavoti">Ava rakendus</button></div>
+        <p class="small mute">Avaekraanile: Androidis Chrome ⋮ → Lisa avaekraanile, iPhone'is Jaga → Lisa kodukuvale.</p></section>`;
+      lastErr = e === 'NOKEY' ? 'Võti puudub — ava saadud lingiga' : 'Võti on vale — küsi uus link';
+    } else lastErr = transient(e) ? 'Pole ühendust' : String(e);
+    status();
+  }).finally(() => loading = 0);
+}
+function save(fn, args, msg) { send(fn, args, msg); }
+
+/* ------------------------------------------------------------ abid */
+const car = koht => D.autod.find(a => a.koht === Number(koht));
+const carByNr = nr => D.autod.find(a => a.nr === String(nr));
+const carsF = () => filter === 'koik' ? D.autod : D.autod.filter(a => String(a.koht) === filter);
+const cvars = a => a ? `--cc:var(--c${a.koht});--ct:var(--c${a.koht}t)` : '--cc:var(--ink);--ct:var(--soft)';
+function waze(nimi) {
+  const p = D.kohad.find(x => x.nimi === nimi);
+  const base = 'https:' + '/' + '/waze.com/ul?';
+  if (p && p.lat && p.lon) return base + 'll=' + p.lat.replace(',', '.') + ',' + p.lon.replace(',', '.') + '&navigate=yes';
+  return base + 'q=' + encodeURIComponent((p && p.aadress) || nimi) + '&navigate=yes';
+}
+function tripVisible(t) {
+  if (filter === 'koik') return true;
+  const a = carByNr(t.nr);
+  return a ? String(a.koht) === filter : true;
+}
+function boundary(t) { if (t && t > now() && t < nextB) nextB = t; }
+function overlap(h) {
+  return D.hooldused.filter(o => o.koht !== h.koht && o.sisse && h.sisse && o.sisse < h.valja && h.sisse < o.valja);
+}
+function tasksFor(h) { return (D.logid[h.koht] || []).filter(l => l.hooldus === h.nimi); }
+
+/* ------------------------------------------------------------ joonistamine */
+function render() {
+  if (!D) return;
+  const ae = document.activeElement;
+  if (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName) && $('#main').contains(ae)) { pending = true; return; }
+  pending = false;
+  nextB = Infinity;
+  $('#ralli').textContent = D.ralli || 'Hooldus';
+  renderChips();
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('on', b.dataset.view === view));
+  const m = $('#main');
+  const html = view === 'ajakava' ? vAjakava() : view === 'logi' ? vLogi() : view === 'info' ? vInfo() : vNyyd();
+  const ai = $('#aegIn'), keepAeg = ai ? ai.value : null, ki = $('#kyIn'), keepKy = ki ? ki.value : null;
+  m.innerHTML = html;
+  const ai2 = $('#aegIn'); if (ai2 && keepAeg !== null) ai2.value = keepAeg;
+  const ki2 = $('#kyIn'); if (ki2 && keepKy !== null) ki2.value = keepKy;
+  document.documentElement.style.setProperty('--hh', $('#hdr').offsetHeight + 'px');
+  const sg = m.querySelector('.seg');
+  document.documentElement.style.setProperty('--sh', (sg ? sg.offsetHeight - 4 : 0) + 'px');
+  tick(true);
+  if (view === 'ajakava' && scrollNext) {
+    scrollNext = false;
+    const n = m.querySelector('.srw.next');
+    if (n) n.scrollIntoView({ block: 'center' });
+  }
+  if (focusAfter) { const el = document.getElementById(focusAfter); focusAfter = null; if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); } }
+}
+function renderChips() {
+  const el = $('#chips'), many = D.autod.length >= 3;
+  el.hidden = D.autod.length < 2;
+  if (el.hidden) { el.innerHTML = ''; return; }
+  const c = ['<button class="chip ' + (filter === 'koik' ? 'on' : '') + '" data-act="filter" data-v="koik">' + (many ? 'Kõik' : 'Kõik autod') + '</button>']
+    .concat(D.autod.map(a => `<button class="chip ${filter === String(a.koht) ? 'on' : ''}" data-act="filter" data-v="${a.koht}"><span class="dot" style="background:var(--c${a.koht})"></span>${minu === String(a.koht) ? '★ ' : ''}${esc(a.nr)}${many ? '' : ' ' + esc(a.lyhend)}</button>`));
+  el.innerHTML = c.join('');
+}
+
+/* ---- NÜÜD */
+function vNyyd() {
+  const multi = D.autod.length > 1;
+  if (multi && (!minu || minuValik)) return minuCard() + kalWarn() + tripCard() + carsF().map(carCard).join('') + allServices();
+  const cars = carsF().slice().sort((p, q) => (String(q.koht) === minu) - (String(p.koht) === minu));
+  const mc = minu && minu !== 'koik' ? car(minu) : null;
+  const tagasi = mc && filter !== minu ? `<section class="card minubar" style="${cvars(mc)}"><span class="tx">Vaatad ${filter === 'koik' ? 'kõiki autosid' : esc((car(filter) || {}).nr)}</span><button class="btn dark" style="flex:none;min-height:40px;padding:0 12px" data-act="filter" data-v="${mc.koht}">★ Tagasi ${esc(mc.nr)}</button></section>` : '';
+  return tagasi + kalWarn() + tripCard() + cars.map(carCard).join('') + allServices() +
+    (multi ? `<div class="minuft"><button data-act="minuvali">★ See telefon: ${mc ? esc(mc.nr) + ' ' + esc(mc.meeskond) : 'mehaanik, kõik autod'} · muuda</button></div>` : '');
+}
+function minuCard() {
+  return `<section class="card minu"><b>Kelle telefon see on?</b>
+    <div class="small mute">Sinu auto on alati ees, kui rakenduse avad. Teisi autosid näed ülal nuppudega. Signaalinupud (OK / PROBLEEM / KATKESTASIME) on ainult sinu auto kaardil.</div>
+    <div class="mb">${D.autod.map(a => `<button class="btn ${minu === String(a.koht) ? 'dark' : 'ghost'}" style="${cvars(a)};border-left:6px solid var(--c${a.koht});flex-direction:column;align-items:flex-start;text-align:left;gap:2px" data-act="minu" data-v="${a.koht}"><span>${esc(a.nr)} · ${esc(a.meeskond || a.lyhend)}</span><span class="small" style="font-weight:400;opacity:.75">sõitja või kaardilugeja</span></button>`).join('')}
+      <button class="btn ${minu === 'koik' ? 'dark' : 'ghost'}" data-act="minu" data-v="koik">🔧 Mehaanik · kõik autod</button></div>
+  </section>`;
+}
+function tripCard() {
+  const n = now();
+  const up = D.soidud.filter(t => t.lahku && t.lahku > n - 3 * MIN && tripVisible(t)).sort((a, b) => a.lahku - b.lahku);
+  if (!up.length) return `<section class="card pad trip"><div class="lbl">🚐 Meie järgmine sõit</div><div style="margin-top:6px;font-weight:700">Mehaanikute sõite rohkem pole</div></section>`;
+  const t0 = up[0].lahku, grp = up.filter(t => t.lahku === t0), then = up.find(t => t.lahku !== t0);
+  boundary(t0); boundary(t0 + 3 * MIN); if (then) boundary(then.lahku);
+  const kuhu = [...new Set(grp.map(t => t.kuhu).filter(Boolean))];
+  const kust = [...new Set(grp.map(t => t.kust).filter(Boolean))];
+  const anyCar = grp.some(t => carByNr(t.nr));
+  const items = grp.map(t => {
+    const a = carByNr(t.nr);
+    const dot = a ? `<span class="dot" style="flex:none;width:10px;height:10px;border-radius:50%;background:var(--c${a.koht});margin-top:6px"></span>` : anyCar ? '<span style="width:10px;flex:none"></span>' : '';
+    return `<li>${dot}<span>${esc(t.ylesanne)}${t.nr && !a && t.nr !== '' ? ' <span class="mute">(' + esc(t.nr) + ' auto järgi)</span>' : ''}</span></li>`;
+  }).join('');
+  const g = grp[0];
+  return `<section class="card pad trip" data-urg="${t0}">
+    <div class="lbl">🚐 Meie järgmine sõit</div>
+    <div class="big"><span class="lahku">LAHKU ${hm(t0)}</span></div>
+    <div class="cd" data-cd="${t0}" data-now="LAHKU NÜÜD!">…</div><div class="cdl" data-cdl="${t0}"></div>
+    <ul class="tasks">${items}</ul>
+    <div class="route">${esc(kust.join(' / '))} → <b>${esc(kuhu.join(' / '))}</b>${g.soit ? ' · sõit ' + esc(g.soit) + ' min' : ''}${g.kohal ? ' · kohal ' + hm(g.kohal) : ''}</div>
+    ${g.markus ? `<div class="small mute" style="margin-top:4px">${esc(g.markus)}</div>` : ''}
+    ${kuhu.length ? `<a class="btn waze" href="${waze(kuhu[0])}" target="_blank" rel="noopener">Navigeeri: ${esc(kuhu[0])} ›</a>` : ''}
+    ${KALENDER && D.url ? `<div style="display:flex;gap:8px;align-items:center;margin-top:8px">${kalBtn('soit-' + grp[0].rida, grp[0])}<span class="small mute">Lisa kalendrisse, meeldetuletus 10 min ette</span></div>` : ''}
+    ${then ? `<div class="then">Seejärel <b class="num">${hm(then.lahku)}</b> · ${esc(then.ylesanne)}</div>` : ''}
+  </section>`;
+}
+function carCard(a) {
+  const n = now();
+  const cards = D.hooldused.filter(h => h.koht === a.koht && h.sisse);
+  const timed = (D.ajakavad[a.koht] || []).filter(r => r.t);
+  const start = timed[0], end = timed[timed.length - 1];
+  const run = cards.find(h => h.sisse <= n && n < h.valja);
+  const next = cards.find(h => h.sisse > n);
+  const focus = run || next;
+  const ctrl = timed.find(r => r.t > n && r.tyyp !== 'INFO' && r.tyyp !== 'SERVICE');
+  const prev = [...timed].reverse().find(r => r.t <= n);
+  cards.forEach(h => { boundary(h.sisse); boundary(h.valja); });
+  if (ctrl) boundary(ctrl.t);
+  let st = '', stime = '', cdT = null, cls = '', urg = '';
+  if (start && n < start.t) { st = 'Enne starti'; stime = 'START ' + start.aeg; cdT = start.t; urg = start.t; }
+  else if (run) { st = '🔧 Hooldus käib · ' + run.nimi; stime = 'OUT ' + run.valjaTxt; cdT = run.valja; cls = 'run'; urg = run.valja; }
+  else if (next) { st = 'Järgmine hooldus · ' + next.nimi; stime = 'IN ' + next.sisseTxt + ' → OUT ' + next.valjaTxt; cdT = next.sisse; }
+  else if (end && n < end.t) { st = 'Hooldused tehtud'; stime = 'Finiš ' + end.aeg; cdT = end.t; }
+  else { st = 'Ralli läbi 🏁'; }
+  const where = [];
+  if (prev && start && n >= start.t) where.push(`📍 Viimati ${esc(prev.akp)} · ${esc(prev.mis)} <span class="num">${prev.aeg}</span>`);
+  if (ctrl && !(start && n < start.t)) where.push(`➡ Järgmine ${esc(ctrl.akp)} · ${esc(ctrl.mis)} <b class="num">${ctrl.aeg}</b> <span class="mute">(${durShort(ctrl.t - n)})</span>`);
+  const ky = kyNyyd(a, n);
+  const ssJ = timed.find(r => r.t > n && r.tyyp === 'SS'), kInfo = ssJ ? katseFor(ssJ.akp) : [];
+  const sigOk = start && n > start.t - 60 * MIN && !(end && n > end.t + 3 * 3600000) && (!minu || minu === 'koik' || minu === String(a.koht));
+  const sig = !sigOk ? '' : !run || sigShow.has(a.koht) || (sigOpen && sigOpen.koht === a.koht) ? sigBar(a)
+    : `<div class="sigb"><button class="linkbtn" data-act="sigshow" data-koht="${a.koht}">📣 Signaal mehaanikutele (OK / PROBLEEM / KATKESTASIME) ›</button></div>`;
+  return `<section class="card car" style="${cvars(a)}">
+    <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">${esc(a.meeskond)}<small>${esc([a.auto, a.klass].filter(Boolean).join(' · '))}</small></span></div>
+    ${sigBanner(a)}
+    <div class="state ${cls}" ${urg ? `data-urg="${urg}"` : ''}>
+      <div class="st">${esc(st)}</div>
+      <div class="sv"><span class="stime num">${esc(stime)}</span>${cdT ? `<span class="cd" data-cd="${cdT}" data-now="NÜÜD">…</span>` : ''}</div>
+    </div>
+    ${where.length ? `<div class="where">${where.join('<br>')}</div>` : ''}
+    ${run ? '' : sig}
+    ${ky ? `<div class="prestart"><div class="warnline">${ky}</div></div>` : ''}
+    ${kInfo.length ? `<div class="prestart"><div class="warnline">${kInfo.some(x => x.oht) ? '⚠' : 'ℹ'} ${esc(ssJ.akp)} katseinfo: ${kInfo.slice(0, 3).map(x => esc(x.info) + ' <span style="font-weight:600">· kirjutas ' + esc(x.nr) + (x.aeg && !x.ootel ? ', ' + esc(x.aeg) : '') + '</span>').join('<br>')}<div class="small" style="font-weight:600;margin-top:4px">Lisa või vaata: Ajakava → ${esc(ssJ.akp)} rida</div></div></div>` : ''}
+    ${start && n < start.t && start.markus ? prestart(start.markus) : ''}
+    ${focus ? (run || focus.sisse - n <= 45 * MIN || openSvc.has(focus.rida) ? svcBlock(a, focus, !!run) : svcSum(a, focus)) : ''}
+    ${run ? sig : ''}
+  </section>`;
+}
+function prestart(m) {
+  const p = String(m).split(/\s+·\s+/).filter(Boolean);
+  const hot = p.filter(x => /🧯|💡|splint|TULED/i.test(x)), rest = p.filter(x => hot.indexOf(x) < 0);
+  return `<div class="prestart">${hot.map(x => `<div class="warnline">${esc(x)}</div>`).join('')}${rest.length ? `<div class="small mute">${esc(rest.join(' · '))}</div>` : ''}</div>`;
+}
+function svcSum(a, h) {
+  const L = tasksFor(h), open = L.filter(l => !l.tehtud).length;
+  const lights = /PEALE/i.test(h.tuled) ? '💡 tuled peale' : /ÄRA/i.test(h.tuled) ? '💡 tuled ära' : '';
+  const kk = (h.kontroll || []).length;
+  const bits = [lights ? `<span class="wl">${lights}</span>` : '', open ? `📝 ${open} teha` : '', h.tood ? '🔧 tööd kirjas' : '', kk ? `🔍 ${kk}/${(D.kontroll || []).length}` : ''].filter(Boolean);
+  return `<button class="svsum" data-act="svcopen" data-rida="${h.rida}">
+    <span class="s"><b>${esc(h.nimi)}</b> · <span class="num">${esc(h.sisseTxt)}–${esc(h.valjaTxt)}</span>${bits.length ? '<br>' + bits.join(' · ') : ''}</span>
+    <span class="go">Näita ▾</span></button>`;
+}
+function svcBlock(a, h, running) {
+  const L = tasksFor(h), open = L.filter(l => !l.tehtud), done = L.filter(l => l.tehtud);
+  const lights = /PEALE/i.test(h.tuled) ? '💡 PANE TULED PEALE' : /ÄRA/i.test(h.tuled) ? '💡 VÕTA TULED ÄRA' : '';
+  const ov = overlap(h).map(o => { const b = car(o.koht); return `⚠ Samal ajal ka ${esc(b ? b.nr : '')} · ${esc(o.nimi)} ${esc(o.sisseTxt)}–${esc(o.valjaTxt)}`; });
+  const ees = h.ees !== '' ? Number(h.ees).toFixed(1) : '', taga = h.taga !== '' ? Number(h.taga).toFixed(1) : '';
+  return `<div class="svc">
+    ${openSvc.has(h.rida) && !running ? `<button class="linkbtn" style="padding:0;align-self:flex-end" data-act="svcclose" data-rida="${h.rida}">Peida ▴</button>` : ''}
+    <div class="svhead">
+      <div class="t"><b>${esc(h.nimi)}</b><div class="small mute num">${esc(h.sisseTxt)}–${esc(h.valjaTxt)} · ${esc(h.min)} min${running ? '' : ' · tulemas'}</div></div>
+      <button class="done-btn ${h.tehtud ? 'on' : ''}" data-act="svc" data-rida="${h.rida}" data-v="${!h.tehtud}">${h.tehtud ? '✓ Tehtud' : 'Märgi tehtuks'}</button>
+    </div>
+    ${lights ? `<div class="lights">${lights}</div>` : ''}
+    ${ov.map(x => `<div class="warnline">${x}</div>`).join('')}
+    ${h.tood ? `<div class="line"><span class="i">🔧</span><span>${esc(h.tood)}</span></div>` : ''}
+    ${h.ilm ? `<div class="line"><span class="i">🌦</span><span>${esc(h.ilm.replace(/^\S+\s/, ''))}</span></div>` : ''}
+    <div class="logs">
+      <div class="lbl">📝 Logist sellele hooldusele${L.length ? ' · ' + open.length + ' teha' : ''}</div>
+      ${open.map(l => logItem(a, l)).join('') || '<div class="small mute">Kirjeid pole.</div>'}
+      ${done.length ? `<div class="small mute">✓ tehtud: ${done.length}</div>` : ''}
+      <button class="linkbtn" data-act="gotolog" data-koht="${a.koht}">＋ Lisa kirje ${esc(a.nr)} logisse</button>
+    </div>
+    <div class="press">
+      <span class="pl">🛞 Rõhud väljudes (bar)</span>
+      <label class="field">ees <input class="inp n" id="pe${h.rida}" inputmode="decimal" value="${ees}" data-orig="${ees}" data-pr="${h.rida}"></label>
+      <label class="field">taga <input class="inp n" id="pt${h.rida}" inputmode="decimal" value="${taga}" data-orig="${taga}" data-pr="${h.rida}"></label>
+      <button class="save" id="ps${h.rida}" data-act="rohk" data-rida="${h.rida}" hidden>Salvesta</button>
+    </div>
+    ${chkBlock(h)}
+  </div>`;
+}
+function logItem(a, l, badge) {
+  return `<div class="logitem ${l.tehtud ? 'ok' : ''}" ${badge ? `style="${cvars(a)}"` : ''}>${badge ? `<span class="cbadge">${esc(a.nr)}</span>` : ''}
+    ${l.rida < 0 ? '<span class="cb pend" title="ootab saatmist">⏳</span>' : `<button class="cb ${l.tehtud ? 'on' : ''}" data-act="log" data-koht="${a.koht}" data-rida="${l.rida}" data-v="${!l.tehtud}" aria-label="tehtud">${l.tehtud ? '✓' : ''}</button>`}
+    <div class="tx">${esc(l.tekst)}<div class="meta">${l.ootel ? '⏳ ' : ''}${esc(l.aeg)}${l.hooldus ? ' · → ' + esc(l.hooldus) : ''}</div></div>
+  </div>`;
+}
+function allServices() {
+  const n = now();
+  const list = D.hooldused.filter(h => h.sisse && (filter === 'koik' || String(h.koht) === filter));
+  if (!list.length) return '';
+  let nextMarked = false;
+  const rows = list.map(h => {
+    const a = car(h.koht);
+    let cls = '', pill = '';
+    if (h.valja <= n) cls = 'past';
+    if (h.sisse <= n && n < h.valja) { cls = 'now'; pill = '<span class="pill run">käib</span>'; }
+    else if (h.sisse > n && !nextMarked) { nextMarked = true; pill = '<span class="pill next">järgmine</span>'; }
+    if (h.tehtud) pill = '<span class="pill ok">✓ tehtud</span>';
+    return `<div class="srow ${cls}" style="${cvars(a)}"><span class="bar"></span><span class="n">${esc(a ? a.nr : '')}</span>
+      <span class="s"><b>${esc(h.nimi)}</b> <span class="num mute">${esc(h.sisseTxt)}–${esc(h.valjaTxt)}</span>${/PEALE|ÄRA/i.test(h.tuled) ? ' 💡' : ''}</span>${pill}${h.valja > n ? kalBtn('ho-' + h.rida, h) : ''}</div>`;
+  }).join('');
+  return `<div class="h2">Kõik hooldused</div><section class="card slist">${rows}</section>`;
+}
+
+/* ---- AJAKAVA */
+function vAjakava() {
+  let a = (filter !== 'koik' ? car(filter) : null) || (minu && minu !== 'koik' ? car(minu) : null) || car(ajAuto) || D.autod[0];
+  if (!a) return '<div class="card empty">Autosid pole.</div>';
+  const n = now();
+  const rows = D.ajakavad[a.koht] || [];
+  const nextIdx = rows.findIndex(r => r.t && r.t > n);
+  if (nextIdx >= 0) boundary(rows[nextIdx].t);
+  // auto valitakse ülal (kiibid); „Kõik autod“ all näitab oma (★) või viimati vaadatud auto ajakava
+  const seg = filter === 'koik' && D.autod.length > 1 ? `<div class="hint">Ajakava: <b>${esc(a.nr)} ${esc(a.lyhend)}</b>. Teise auto ajakava näed, kui vajutad ülal selle auto nuppu.</div>` : '';
+  let lastT = 0;
+  const html = rows.map((r, i) => {
+    if (r.paev) return `<div class="day">${esc(r.paev)}</div>`;
+    if (r.t) lastT = r.t;
+    const past = (r.t ? r.t <= n : (lastT && lastT <= n && i < nextIdx)) ? ' past' : '';
+    const isNext = i === nextIdx;
+    const sub = [r.tyyp === 'SS' && r.km ? r.km + ' km' : '', r.ilm, r.markus].filter(Boolean).map(esc).join(' · ');
+    const key = a.koht + '|' + r.rida;
+    const tm = r.muudetav && r.aeg
+      ? `<button class="tmb" data-act="aegedit" data-k="${key}">${esc(r.aeg)}${r.ootel ? '<span class="ed">⏳</span>' : r.muudetud ? '<span class="ed">✎</span>' : ''}</button>${r.muudetud && r.plaan ? `<span class="plan">plaan ${esc(r.plaan)}</span>` : ''}`
+      : esc(r.aeg);
+    const ed = editAeg === key ? `<div class="aegedit">
+        <span class="tin"><button class="adj" data-act="aegadj" data-d="-1" aria-label="miinus 1 min">−1</button><input id="aegIn" inputmode="numeric" autocomplete="off" maxlength="5" placeholder="HH:MM" value="${esc(r.aeg)}"><button class="adj" data-act="aegadj" data-d="1" aria-label="pluss 1 min">+1</button><button class="adj" data-act="aegadj" data-d="5" aria-label="pluss 5 min">+5</button></span>
+        <button class="save" data-act="aegsave" data-koht="${a.koht}" data-rida="${r.rida}">Salvesta</button>
+        ${r.muudetud && r.plaan ? `<button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="aegplaan" data-koht="${a.koht}" data-rida="${r.rida}">Plaani aeg ${esc(r.plaan)}</button>` : ''}
+        <button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="aegcancel">Loobu</button>
+        <span class="small mute">${esc(r.akp)} · MEIE AEG. Järgmised ajad, hooldused ja sõidud nihkuvad ise.</span>
+      </div>` : '';
+    return `<div class="srw ${esc(r.tyyp)}${isNext ? ' next' : ed ? '' : past}">
+      <span class="tm">${tm}</span><span class="ak">${esc(r.akp)}</span>
+      <span class="ms">${esc(r.mis)}${sub ? `<small>${sub}</small>` : ''}${r.tyyp === 'RZ' ? kyBtn(a, r) + kyEst(a, r.akp) : ''}${r.tyyp === 'SS' ? katseInfo(r.akp) + `<button class="kib" data-act="katseopen" data-k="${a.koht}|${esc(r.akp)}">＋ Katseinfo teistele</button>` : ''}${isNext ? `<span class="nextb">JÄRGMINE · <span data-cd="${r.t}" data-now="nüüd">…</span></span>` : ''}</span>
+      ${ed}${r.tyyp === 'RZ' && editKy === a.koht + '|' + r.akp ? kyEdit(a, r) : ''}${r.tyyp === 'SS' && editKatse === a.koht + '|' + r.akp ? katseEdit(a, r) : ''}
+    </div>`;
+  }).join('');
+  return seg + `<div class="hint">Hilinesid AKP-s? Vajuta kellaajale ja muuda MEIE AEGA — järgmised ajad nihkuvad ise.</div>
+    <section class="card sched" style="${cvars(a)}">${html || '<div class="empty">Ajakava on tühi.</div>'}</section>
+    <div class="hint">✎ = aeg muudetud (all on plaani aeg). ⛽ = mitu liitrit peab RZ-st väljudes paagis olema. → = hinnang, palju jääb järgmiseks RZ-ks (tangitud liitrid ja katsete km).</div>`;
+}
+
+function kyRow(rz) { return (D.kytus || []).find(x => x.rz === rz); }
+function kyBtn(a, r) {
+  const k = kyRow(r.akp);
+  if (!k) return '';
+  const t = k.tangitud[a.koht - 1];
+  return `<button class="kyb" data-act="kyedit" data-k="${a.koht}|${esc(r.akp)}">${t !== '' ? `⛽ Tangitud ${esc(t)} l${k.ootel ? ' ⏳' : ' ✎'}` : '＋ Märgi, palju tangiti'}</button>`;
+}
+function kyEdit(a, r) {
+  const k = kyRow(r.akp), t = k ? k.tangitud[a.koht - 1] : '', p = k ? k.plaan[a.koht - 1] : '';
+  return `<div class="aegedit">
+    <span class="tin"><input id="kyIn" inputmode="decimal" autocomplete="off" maxlength="5" placeholder="l" value="${esc(t)}"><span class="small" style="flex:none">liitrit</span></span>
+    <button class="save" data-act="kysave" data-koht="${a.koht}" data-rz="${esc(r.akp)}">Salvesta</button>
+    ${t !== '' ? `<button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="kyclear" data-koht="${a.koht}" data-rz="${esc(r.akp)}">Kustuta</button>` : ''}
+    <button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="kycancel">Loobu</button>
+    <span class="small mute">${esc(r.akp)} · ${esc(a.nr)} · mitu liitrit tegelikult tangiti${p !== '' ? ` (plaan ≥ ${esc(p)} l)` : ''}. Läheb Kütuse lehele debriifiks.</span>
+  </div>`;
+}
+
+/** Logi → Katseinfo: sisestus (auto, LK) ja kõik kirjed LK kaupa. */
+function vKatseLogi(a, sel) {
+  const valik = D.katseValik.length ? D.katseValik : ['LK 1'], lk = lastSS(a);
+  const L = (D.katsed || []).slice().sort((p, q) => (valik.indexOf(p.lk) - valik.indexOf(q.lk)) || (q.oht - p.oht));
+  return `<section class="card car" style="${cvars(a)}">
+      <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">Uus katseinfo<small>Teistele meeskondadele: kivid, vesi, muda, muutunud kurv</small></span></div>
+      <div class="form">
+        ${sel || ''}
+        <select class="inp" id="kLk" aria-label="Katse">${valik.map(v => `<option ${v === lk ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+        <input class="inp" id="kTx" maxlength="300" placeholder="km ja mis seal on, nt „km 3.4 kivi sisekaarel“">
+        <label class="small" style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" id="kOht" style="width:36px;height:36px;flex:none"> ⚠ Tähtis (ohtlik koht, punane)</label>
+        <button class="btn dark" data-act="addkatse" data-nr="${esc(a.nr)}">Lisa ${esc(a.nr)} katseinfo</button>
+        <div class="small mute">Teised näevad seda Ajakavas selle LK real ja Nüüd-vaates enne katset.</div>
+      </div>
+    </section>
+    <div class="h2">Katseinfo · ${L.length}</div>
+    <section class="card">${L.map(x => katseRida(x)).join('') || '<div class="empty">Kirjeid pole.</div>'}</section>`;
+}
+function katseRida(x) {
+  const c = carByNr(x.nr), r = x.rida;
+  const nupp = r && !x.ootel ? `<button class="btn ghost" style="flex:none;min-height:40px;padding:0 12px" data-act="katsemuuda" data-rida="${r}" aria-label="Muuda katseinfot">✎</button>` : '';
+  const vaade = `<div class="rowi" style="${cvars(c)}"><span class="badge">${esc(x.lk)}</span><div class="s ${x.oht ? 'oht' : ''}">${x.oht ? '⚠ ' : ''}${esc(x.info)}<div class="small mute">kirjutas ${esc(x.nr)} · ${x.ootel ? '⏳' : esc(x.aeg)}</div></div>${nupp}</div>`;
+  if (muudaKatse !== r || !r) return vaade;
+  const kk = kustutaKatse === r;
+  return vaade + `<div class="aegedit" style="border-top:0">
+    <input class="inp" id="kmTx" maxlength="300" value="${esc(x.info)}" style="flex:1 1 100%;font-size:16px;font-weight:600;letter-spacing:0;text-align:left;width:100%">
+    <label class="small" style="display:flex;gap:10px;align-items:center;min-height:44px;flex:1 1 100%"><input type="checkbox" id="kmOht" ${x.oht ? 'checked' : ''} style="width:36px;height:36px;flex:none"> ⚠ Tähtis (ohtlik koht, punane)</label>
+    <button class="save" data-act="katsesave" data-rida="${r}">Salvesta</button>
+    <button class="btn ghost" style="min-height:44px;padding:0 12px;${kk ? 'border-color:var(--hot);color:var(--hot);font-weight:900' : ''}" data-act="katsedel" data-rida="${r}">${kk ? 'Jah, eemalda' : '🗑 Eemalda'}</button>
+    <button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="katsemuudacancel">Loobu</button>
+    ${kk ? '<span class="small" style="color:var(--hot);font-weight:700">Eemaldab kirje tabelist kõigilt. Vajuta veel kord.</span>' : ''}
+  </div>`;
+}
+
+/* ---- KATSEINFO: ohtlikud kohad teistele meeskondadele, ajakava LK real ja Nüüd-vaates järgmise katse juures */
+const katseFor = lk => (D.katsed || []).filter(x => x.lk === lk).sort((p, q) => q.oht - p.oht);
+function katseInfo(lk) {
+  return katseFor(lk).map(x => `<span class="ki ${x.oht ? 'oht' : ''}">${x.oht ? '⚠ ' : 'ℹ '}${esc(x.info)} <span class="mute">· ${esc(x.nr)} ${x.ootel ? '⏳' : esc(x.aeg)}</span></span>`).join('');
+}
+function katseEdit(a, r) {
+  return `<div class="aegedit">
+    <input class="inp" id="kTx" maxlength="300" placeholder="km ja mis seal on, nt „km 3.4 kivi sisekaarel“" style="flex:1 1 100%;font-size:16px;font-weight:600;letter-spacing:0;text-align:left;width:100%">
+    <label class="small" style="display:flex;gap:10px;align-items:center;min-height:44px;flex:1 1 100%"><input type="checkbox" id="kOht" style="width:36px;height:36px;flex:none"> ⚠ Tähtis (ohtlik koht, punane)</label>
+    <button class="save" data-act="addkatse" data-nr="${esc(a.nr)}" data-lk="${esc(r.akp)}">Salvesta</button>
+    <button class="btn ghost" style="min-height:44px;padding:0 12px" data-act="katsecancel">Loobu</button>
+    <span class="small mute">${esc(r.akp)} · ${esc(a.nr)} · teised meeskonnad näevad seda ajakavas ja enne katset Nüüd-vaates.</span>
+  </div>`;
+}
+
+/* ---- LOGI */
+function logCar() {
+  if (filter !== 'koik' && car(filter)) return car(filter);
+  return car(logAuto) || D.autod[0];
+}
+function vLogi() {
+  const a = logCar();
+  if (!a) return '<div class="card empty">Autosid pole.</div>';
+  const multi = D.autod.length > 1;
+  const sel = multi && filter === 'koik' ? `<div class="logseg">${D.autod.map(x => `<button style="${cvars(x)}" class="${x.koht === a.koht ? 'on' : ''}" data-act="logauto" data-koht="${x.koht}">${esc(x.nr)}${D.autod.length >= 3 ? '' : ' ' + esc(x.lyhend)}</button>`).join('')}</div>` : '';
+  const L = [];
+  carsF().forEach(x => (D.logid[x.koht] || []).forEach(l => L.push([x, l])));
+  L.sort((p, q) => (p[1].tehtud - q[1].tehtud) || ((q[1].t || 0) - (p[1].t || 0)));
+  const open = L.filter(p => !p[1].tehtud).length;
+  const AR = D.arendus || {}, arLahti = arRead().filter(r => !suletud(r)).length;
+  const tb = (v, t) => `<button class="${logTab === v ? 'on' : ''}" data-act="logtab" data-v="${v}">${t}</button>`;
+  const tabs = `<div class="toc">${tb('logi', '📝 Logi · ' + open + ' teha')}${tb('katse', '⚠ Katseinfo · ' + (D.katsed || []).length)}${AR.olemas || AR.viga ? tb('arendus', '💡 Rallide vahel · ' + arLahti + ' lahti') : ''}</div>`;
+  if (logTab === 'arendus' && (AR.olemas || AR.viga)) return tabs + vArendus(a, sel);
+  if (logTab === 'katse') return tabs + vKatseLogi(a, sel);
+  return tabs + `<section class="card car" style="${cvars(a)}">
+      <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">Uus logikirje<small>${multi && filter === 'koik' ? 'Vali auto, siis kirjuta' : esc(a.meeskond)}</small></span></div>
+      <div class="form">
+        ${sel}
+        <textarea class="inp" id="lgTx" rows="2" maxlength="300" placeholder="Mis vaja teha või kaasa võtta? Nt „vasak tagumine amort lekib“"></textarea>
+        <button class="btn dark" data-act="addlog" data-koht="${a.koht}">Lisa ${esc(a.nr)} logisse</button>
+        <div class="small mute">Kellaaeg tekib ise. Kirje jõuab järgmise hoolduse kaardile. Mehaanik paneb ✓, kui tehtud.</div>
+      </div>
+    </section>
+    <div class="h2">Logi${multi && filter === 'koik' ? ' · kõik autod' : ''} · ${open} teha</div>
+    <section class="card"><div class="pad logs">${L.map(p => logItem(p[0], p[1], multi)).join('') || '<div class="small mute">Logi on tühi.</div>'}</div></section>
+    ${tabs ? `<section class="card pad artop"><span class="tx small"><b>💡 Idee või mure, mis pole selle ralli töö?</b><br><span class="mute">Pane see rallide vahele, tuleb järgmisel rallil uuesti ette.</span></span><button class="btn ghost" style="flex:none" data-act="logtab" data-v="arendus">Ava ›</button></section>` : ''}`;
+}
+
+/* ---- ARENDUS: ideed ja mured rallide vahel (eraldi tabel, kõik rallid) */
+const autoNimi = x => x.auto || x.meeskond || x.lyhend;
+const suletud = r => r.staatus === 'Tehtud' || r.staatus === 'Ei tee';
+function arRead() {
+  const nimed = carsF().map(autoNimi);
+  return ((D.arendus || {}).read || []).filter(r => nimed.indexOf(r.auto) >= 0);
+}
+function vArendus(a, sel) {
+  const A = D.arendus || { read: [] }, multi = D.autod.length > 1;
+  const read = arRead();
+  const lahti = read.filter(r => !suletud(r)), tehtud = read.filter(suletud);
+  const item = r => {
+    const x = D.autod.find(c => autoNimi(c) === r.auto) || a;
+    return `<div class="logitem ${suletud(r) ? 'ok' : ''}" style="${cvars(x)}"><span class="cbadge">${esc(x.nr)}</span>
+          <div class="tx">${r.liik === 'Mure' ? '⚠ ' : '💡 '}${esc(r.mida)}<div class="meta">${r.ootel ? '⏳ ' : ''}${esc(r.aeg)} · ${esc(r.ralli)} · <b>${esc(r.staatus)}</b>${r.otsus ? ' · ' + esc(r.otsus) : ''}</div></div></div>`;
+  };
+  return `<section class="card car" style="${cvars(a)}">
+      <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">Uus idee või mure<small>Rallide vahel tegemiseks · ${esc(autoNimi(a))}</small></span></div>
+      <div class="form">
+        ${sel || ''}
+        <div class="logseg">${['Idee', 'Mure'].map(v => `<button class="${ideeLiik === v ? 'on' : ''}" data-act="ideeliik" data-v="${v}">${v === 'Mure' ? '⚠ Mure' : '💡 Idee'}</button>`).join('')}</div>
+        <textarea class="inp" id="idTx" rows="2" maxlength="300" placeholder="${ideeLiik === 'Mure' ? 'Mis muretsema paneb? Nt „tagasild kuumeneb pikal katsel“' : 'Mida võiks auto juures parendada? Nt „kiirem tungraua koht“'}"></textarea>
+        <button class="btn dark" data-act="addidee" data-koht="${a.koht}">Lisa ${esc(a.nr)} rallide vahele</button>
+        <div class="small mute">Selle ralli tööd pane logisse. Siia läheb see, mis tuleb teha rallide vahel. Kirje salvestub ühisesse tabelisse „Rallide arendus“ ja tuleb järgmistel rallidel uuesti ette, kuni on tehtud.</div>
+        ${A.viga ? `<div class="small" style="color:var(--warn)">Arenduse tabelit ei saanud lugeda: ${esc(A.viga)}</div>` : ''}
+      </div>
+    </section>
+    <div class="h2">Lahti${multi && filter === 'koik' ? ' · kõik autod' : ''} · ${lahti.length}</div>
+    <section class="card"><div class="pad logs">${lahti.map(item).join('') || '<div class="small mute">Lahtisi kirjeid pole.</div>'}</div></section>
+    ${tehtud.length ? `<div class="h2">Sellel rallil suletud · ${tehtud.length}</div><section class="card"><div class="pad logs">${tehtud.map(item).join('')}</div></section>` : ''}`;
+}
+
+/* ---- SIGNAALID: sõitja annab katse järel märku, mehaanikute telefonid näitavad suurt riba */
+const SIG = { OK: ['✓', 'OK', 'ok'], PROBLEEM: ['⚠', 'PROBLEEM', 'hot'], KATKESTASIME: ['✖', 'KATKESTASIME', 'dnf'] };
+function lastSig(a) { return (D.signaalid || []).find(x => x.nr === a.nr); }
+function sigBanner(a) {
+  const x = lastSig(a), n = now();
+  if (!x || n - x.t > 6 * 3600000) return '';
+  if (x.signaal === 'OK') { if (n - x.t > 30 * MIN) return ''; boundary(x.t + 30 * MIN); }
+  const g = SIG[x.signaal];
+  if (x.tyh) { if (n - x.t > 30 * MIN) return ''; return `<div class="sig tyh"><span class="tx">${g[0]} ${esc(x.kus)} ${g[1]} · TÜHISTATUD<small>Valesti saadetud (${esc(x.tyh)}). Kõik on korras.</small></span><span class="num">${esc(x.aeg)}</span></div>`; }
+  const key = x.nr + '|' + x.t, kinnita = sigTyh === key;
+  const nah = x.signaal === 'OK' ? '' : x.nahtud ? `<span class="nah">👁 Mehaanikud nägid ${esc(x.nahtud)}</span>`
+    : saabKinnitada(x) ? `<button class="nahb" data-act="signahtud" data-nr="${esc(x.nr)}" data-t="${x.t}">👁 Nähtud, tegeleme</button>`
+    : x.ootel ? '' : '<span class="nah">⏳ Mehaanikud pole veel kinnitanud</span>';
+  const tb = x.signaal !== 'OK' && !x.ootel && minuSignaal(x) ? `<button class="tyhb ${kinnita ? 'k' : ''}" data-act="sigtyh" data-nr="${esc(x.nr)}" data-t="${x.t}">${kinnita ? 'Jah, tühista' : 'Tühista'}</button>` : '';
+  return `<div class="sig ${g[2]}" style="flex-wrap:wrap"><span class="tx">${g[0]} ${esc(x.kus)} ${g[1]}${x.tekst ? `<small>${esc(x.tekst)}</small>` : ''}${kinnita ? '<small>Valesti saadetud? Vajuta veel kord.</small>' : ''}</span><span class="num">${x.ootel ? '⏳' : esc(x.aeg)}</span>${tb}${x.ll ? geoLinks(x) : ''}${nah}</div>`;
+}
+function geoLinks(x) {
+  const b = 'https:' + '/' + '/';
+  return `<div class="geo" style="flex:1 1 100%"><a href="${b}waze.com/ul?ll=${x.ll}&navigate=yes" target="_blank" rel="noopener">📍 Waze autoni</a><a href="${b}www.google.com/maps/search/?api=1&query=${x.ll}" target="_blank" rel="noopener">🗺 Kaart${x.tapsus ? ' ±' + esc(x.tapsus) + ' m' : ''}</a></div>`;
+}
+function sigBar(a) {
+  const o = sigOpen && sigOpen.koht === a.koht ? sigOpen.sg : '';
+  const btn = Object.keys(SIG).map(k => `<button class="sg ${SIG[k][2]} ${o === k ? 'on' : ''}" data-act="sigopen" data-koht="${a.koht}" data-sg="${k}">${SIG[k][0]} ${SIG[k][1]}</button>`).join('');
+  const valik = D.katseValik.length ? D.katseValik : [''], lk = lastSS(a);
+  const form = o ? `<div class="sigform">
+      <select class="inp" id="sgKus">${valik.map(v => `<option ${v === lk ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select>
+      <input class="inp" id="sgTx" maxlength="200" placeholder="${o === 'OK' ? 'Lisainfo (pole kohustuslik)' : o === 'PROBLEEM' ? 'Mis viga? Nt „parem esirehv“' : 'Kus oleme? Nt „km 8, auto ohutult teelt väljas“'}">
+      ${geoLine(o)}
+      <div class="frow"><button class="btn dark" data-act="sigsend" data-koht="${a.koht}" data-sg="${o}">Saada ${SIG[o][1]}</button><button class="btn ghost" style="flex:none" data-act="sigcancel">Loobu</button></div>
+    </div>` : '';
+  return `<div class="sigb"><span class="pl">📣 Sõitjalt mehaanikutele · ${esc(a.nr)}</span>${btn}${form}</div>`;
+}
+/** Telefoni GPS signaali juurde: KATKESTASIME puhul otsib kohe, teistel nupuga. */
+function geoStart() {
+  if (!navigator.geolocation) { sigGeo = { st: 'viga', viga: 'Telefon ei anna asukohta' }; keepRender(); return; }
+  sigGeo = { st: 'otsin' }; keepRender();
+  navigator.geolocation.getCurrentPosition(p => {
+    if (!sigOpen) return;
+    sigGeo = { st: 'ok', ll: p.coords.latitude.toFixed(5) + ',' + p.coords.longitude.toFixed(5), tapsus: Math.round(p.coords.accuracy) };
+    keepRender();
+  }, e => {
+    if (!sigOpen) return;
+    sigGeo = { st: 'viga', viga: e && e.code === 1 ? 'Asukoha luba puudub (brauseri seaded)' : 'Asukohta ei leitud' };
+    keepRender();
+  }, { enableHighAccuracy: true, timeout: 20000, maximumAge: 60000 });
+}
+/** Uuenda ainult asukoha rida (tekstikast võib olla fookuses, siis render() ootab). */
+function keepRender() { const e = document.querySelector('.geol'); if (e) e.outerHTML = geoLine(); else render(); }
+function geoLine(o) {
+  const g = sigGeo;
+  if (!g) return `<div class="geol"><button class="btn ghost" style="min-height:40px;padding:0 12px;flex:none" data-act="geo">📍 Lisa asukoht</button><span class="small mute">mehaanikud saavad navigeerida autoni</span></div>`;
+  if (g.st === 'otsin') return '<div class="geol">📍 Otsin asukohta…</div>';
+  if (g.st === 'ok') return `<div class="geol ok">📍 Asukoht lisatud · täpsus ±${esc(g.tapsus)} m</div>`;
+  return `<div class="geol viga">📍 ${esc(g.viga)}. Kirjuta, kus olete (km, tee).<button class="btn ghost" style="min-height:40px;padding:0 12px;flex:none" data-act="geo">Proovi uuesti</button></div>`;
+}
+/** Uued signaalid teistelt telefonidelt → suur hoiatus (OK = teade). */
+function sigCheck() {
+  const L = D.signaalid || [];
+  if (!L.length) return;
+  // minu saadetud signaal sai kinnituse → teade (üks kord)
+  L.forEach(x => {
+    const key = x.nr + '|' + x.t;
+    if (!x.nahtud || !minuSignaal(x) || nahtudTeada.indexOf(key) >= 0) return;
+    nahtudTeada.push(key); LS.set('nahtudTeada', nahtudTeada.slice(-30));
+    toast('👁 Mehaanikud nägid: ' + x.kus + ' ' + x.signaal + ' (' + x.nahtud + ')'); if (heli) beep(2);
+  });
+  const top = Math.max(...L.map(x => x.t));
+  if (!sigSeen) { sigSeen = top; LS.set('sigSeen', sigSeen); return; }
+  const uued = L.filter(x => x.t > sigSeen && !x.ootel && !x.tyh).reverse();
+  if (!uued.length) return;
+  sigSeen = top; LS.set('sigSeen', sigSeen);
+  uued.forEach(x => {
+    const mk = x.nr + '|' + x.signaal + '|' + x.kus, i = sigMine.indexOf(mk);
+    if (i >= 0) { sigMine.splice(i, 1); return; }
+    const a = carByNr(x.nr);
+    if (a && filter !== 'koik' && String(a.koht) !== filter) return;
+    const g = SIG[x.signaal];
+    if (x.signaal === 'OK') { toast(g[0] + ' ' + x.nr + ' · ' + x.kus + ' OK ' + x.aeg); if (heli) beep(1); }
+    else { const kin = saabKinnitada(x); alarm(x.nr + ' · ' + x.kus + ' ' + g[1], x.tekst || x.aeg, 0, g[0], kin ? '👁 Nähtud, tegeleme' : 'Selge'); alarmSig = kin ? x : null; }
+  });
+}
+
+/* ---- STANDARDTÖÖD hoolduse kaardil */
+/* Standardtööde vajutused kogutakse kokku ja saadetakse 1,5 s pärast viimast vajutust ühe päringuga. */
+const kPend = {}, kTimer = {};
+function kOver() { Object.keys(kPend).forEach(r => { const h = D.hooldused.find(x => x.rida === Number(r)); if (h) { h.kontroll = kPend[r].slice(); h.ootel = true; } }); }
+function kSend(r) {
+  clearTimeout(kTimer[r]); delete kTimer[r];
+  const L = kPend[r]; if (!L) return; delete kPend[r];
+  // ootel (veel saatmata) sama hoolduse märked asenduvad uuega
+  for (let i = Q.length - 1; i >= (flushing ? 1 : 0); i--) if (Q[i].fn === 'setKontroll' && Q[i].args[0] === Number(r)) Q.splice(i, 1);
+  save('setKontroll', [Number(r), L], 'Standardtööd ' + L.length + '/' + (D.kontroll || []).length + ' ✓');
+}
+function kSendAll() { Object.keys(kPend).forEach(kSend); }
+function chkBlock(h) {
+  const L = D.kontroll || [], on = h.kontroll || [];
+  if (!L.length) return '';
+  return `<div><div class="lbl">🔍 Standardtööd · ${on.length}/${L.length}</div><div class="chkg">${L.map(m => {
+    const v = on.indexOf(m) >= 0;
+    return `<button class="tg ${v ? 'on' : ''}" data-act="kontroll" data-rida="${h.rida}" data-mis="${esc(m)}" data-v="${!v}">${v ? '✓ ' : ''}${esc(m)}</button>`;
+  }).join('')}</div></div>`;
+}
+const kmArv = x => { const v = parseFloat(String(x || '').replace(',', '.')); return v > 0 ? v : 0; };
+const km1 = x => (Math.round(x * 10) / 10).toFixed(1).replace('.', ',');
+function kutus(a) {
+  const o = []; let jaak = null;
+  (D.kytus || []).forEach(k => {
+    const p = k.plaan[a.koht - 1], t = k.tangitud[a.koht - 1];
+    const kulu = Math.round(((k.lkKm || 0) * (a.lk || 0) + (k.ylesKm || 0) * (a.yles || 0)) * 10) / 10;
+    let paagis = null, plaanist = false;
+    if (t !== '' && t != null) paagis = Math.min(a.paak || 999, Math.max(0, jaak || 0) + Number(t));
+    else if (p !== '' && p != null) { paagis = Math.max(Number(p), jaak || 0); plaanist = true; }
+    else if (jaak !== null) paagis = Math.max(0, jaak);
+    const jargmine = paagis === null ? null : Math.round((paagis - kulu) * 10) / 10;
+    o.push({ rz: k.rz, plaan: p, tangitud: t, kulu, paagis, jargmine, plaanist });
+    jaak = jargmine;
+  });
+  o.forEach((x, i) => { x.kuhu = o[i + 1] ? o[i + 1].rz : 'finiš'; x.vahe = x.jargmine !== null && x.jargmine < (a.varu || 0); });
+  return o;
+}
+function kyEst(a, rz) {
+  const x = kutus(a).find(k => k.rz === rz);
+  if (!x || x.jargmine === null || !x.kulu) return '';
+  return `<span class="kyest ${x.vahe ? 'low' : ''}">${x.vahe ? '⚠ ' : '→ '}${esc(x.kuhu)}: ~${km1(x.jargmine)} l paagis${x.plaanist ? ' (kui tangiti plaani järgi)' : ''} · kulub ~${km1(x.kulu)} l${x.vahe ? ' · varu ' + esc(a.varu) + ' l' : ''}</span>`;
+}
+/** Nüüd-vaade: hoiatus, kui praegusel lõigul võib kütust väheks jääda. */
+function kyNyyd(a, n) {
+  const rows = D.ajakavad[a.koht] || [];
+  let lastT = 0, rz = null;
+  rows.forEach(r => { if (r.t) lastT = r.t; if (r.tyyp === 'RZ' && lastT && lastT <= n) rz = r.akp; });
+  if (!rz) return '';
+  const x = kutus(a).find(k => k.rz === rz);
+  return x && x.vahe ? `⛽ Kütust võib jääda väheks: ${esc(x.kuhu)}-s ~${km1(x.jargmine)} l (varu ${esc(a.varu)} l)` : '';
+}
+
+/* ---- DEBRIIF: kokkuvõte pärast rallit (jagamiseks WhatsAppi / Messengeri või PDF-iks) */
+function mm(x) { const m = /^(\d\d):(\d\d)$/.exec(x || ''); return m ? Number(m[1]) * 60 + Number(m[2]) : null; }
+function debriif(a) {
+  const S = [], add = (pealkiri, read) => S.push({ pealkiri, read });
+  const rows = (D.ajakavad[a.koht] || []).filter(r => r.muudetud && r.plaan && r.aeg);
+  add('⏱ Ajad (MEIE AEG vs plaan)', rows.length ? rows.map(r => {
+    const d = ((mm(r.aeg) - mm(r.plaan) + 2160) % 1440) - 720;
+    return { t: `${r.akp} ${r.mis}: plaan ${r.plaan} → ${r.aeg} (${d > 0 ? '+' : ''}${d} min)`, c: d > 0 ? 'hot' : '' };
+  }) : [{ t: 'Kõik ajad plaani järgi' }]);
+  const N = (D.kontroll || []).length;
+  add('🔧 Hooldused', D.hooldused.filter(h => h.koht === a.koht).map(h => {
+    const k = h.kontroll || [], puudu = (D.kontroll || []).filter(m => k.indexOf(m) < 0);
+    const r = h.ees !== '' || h.taga !== '' ? ` · rõhud ${h.ees}/${h.taga}` : '';
+    return { t: `${h.nimi} ${h.sisseTxt}–${h.valjaTxt}${h.tehtud ? ' ✓' : ' · märkimata'}${r} · standardtööd ${k.length}/${N}${puudu.length && k.length ? ' (puudu: ' + puudu.join(', ') + ')' : ''}`, c: h.tehtud ? 'ok' : '' };
+  }));
+  const L = D.logid[a.koht] || [], lahti = L.filter(l => !l.tehtud);
+  add(`📝 Logi · ${L.length} kirjet, ${L.length - lahti.length} tehtud`, L.map(l => ({ t: (l.tehtud ? '✓ ' : '☐ ') + l.tekst + (l.hooldus ? ' (' + l.hooldus + ')' : ''), c: l.tehtud ? '' : 'hot' })));
+  const K = kutus(a), kokku = K.reduce((s, x) => s + (x.tangitud !== '' ? Number(x.tangitud) : 0), 0);
+  add(`⛽ Kütus · tangitud kokku ${km1(kokku)} l`, K.map(x => ({ t: `${x.rz}: plaan ≥ ${x.plaan === '' ? '–' : x.plaan} l · tangiti ${x.tangitud === '' ? '–' : x.tangitud + ' l'}${x.jargmine !== null && x.kulu ? ' · ' + x.kuhu + ' ~' + km1(x.jargmine) + ' l' : ''}`, c: x.vahe ? 'hot' : '' })));
+  const sg = (D.signaalid || []).filter(x => x.nr === a.nr).slice().reverse();
+  if (sg.length) add('📣 Signaalid', sg.map(x => ({ t: `${x.aeg} ${x.kus} ${x.signaal}${x.tekst ? ': ' + x.tekst : ''}${x.tyh ? ' · ' + x.tyh : x.nahtud ? ' · nähtud ' + x.nahtud : ''}`, c: x.signaal === 'OK' ? 'ok' : 'hot' })));
+  const ar = ((D.arendus || {}).read || []).filter(r => r.auto === autoNimi(a) && r.ralli === D.ralli);
+  if (ar.length) add('💡 Ideed ja mured sellelt rallilt', ar.map(r => ({ t: (r.liik === 'Mure' ? '⚠ ' : '💡 ') + r.mida + ' · ' + r.staatus })));
+  return S;
+}
+function dbText() {
+  return [D.ralli + ' · kokkuvõte'].concat(carsF().map(a => [`\n${a.nr} ${a.meeskond}${a.auto ? ' · ' + a.auto : ''}`]
+    .concat(debriif(a).map(x => '\n' + x.pealkiri + '\n' + x.read.map(r => '• ' + r.t).join('\n'))).join('\n'))).join('\n');
+}
+function vDebriif() {
+  const top = `<section class="card pad"><b>📋 Kokkuvõte · ${esc(D.ralli)}</b>
+    <div class="small mute">Kokkuvõte ajakavast, hooldustest, logist, kütusest ja signaalidest${filter === 'koik' ? '' : ' · ' + esc((car(filter) || {}).nr)}. Jaga tekstina WhatsAppi või Messengeri või salvesta PDF-iks.</div>
+    <div class="dbbtn"><button class="btn dark" data-act="dbshare">Jaga tekstina</button><button class="btn ghost" data-act="dbprint">Prindi / PDF</button></div>
+    ${dbTekst !== null ? `<textarea class="inp" id="dbTx" rows="8" style="margin-top:10px" readonly>${esc(dbTekst)}</textarea><div class="small mute">Vali tekst ja kopeeri.</div>` : ''}
+  </section>`;
+  return top + carsF().map(a => `<section class="card car" style="${cvars(a)}">
+    <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">${esc(a.meeskond)}<small>${esc([a.auto, a.klass].filter(Boolean).join(' · '))}</small></span></div>
+    ${debriif(a).map(x => `<div class="dbs"><div class="lbl">${esc(x.pealkiri)}</div><ul>${x.read.map(r => `<li class="${r.c || ''}">${esc(r.t)}</li>`).join('') || '<li class="mute">–</li>'}</ul></div>`).join('')}
+  </section>`).join('') + vAjalugu();
+}
+/* ---- AJALUGU: pärast rallit kokkuvõte ja sündmused tabelisse „Rallide arendus“ (lehed Ajalugu, Sündmused) */
+let ajaluguKinnita = false, ajaluguTeel = false;
+function vAjalugu() {
+  const sees = D.seaded && D.seaded.arendus;
+  return `<section class="card pad" id="ajalugu"><b>📚 Rallide ajalugu</b>
+    <div class="small mute">${sees ? 'Pärast rallit: iga auto kokkuvõte ja kõik rakenduse sündmused lähevad rallide ajalukku (tabel „Rallide arendus“, lehed Ajalugu ja Sündmused). Võid hiljem uuesti vajutada, siis ajalugu uueneb.' : 'Arenduse tabel pole seotud (Seaded B13), ajalugu pole kuhu salvestada.'}</div>
+    ${sees ? `<div class="dbbtn"><button class="btn dark" ${ajaluguKinnita ? 'style="background:var(--alarm);border-color:var(--alarm);color:#fff"' : ''} data-act="ajalukku" ${ajaluguTeel ? 'disabled' : ''}>${ajaluguTeel ? 'Salvestan…' : ajaluguKinnita ? 'Vajuta uuesti: salvesta' : 'Salvesta ajalukku'}</button></div>` : ''}
+  </section>`;
+}
+
+/* ---- KALENDER: iga sündmus eraldi, rakendus jätab meelde lisatud aja ja annab märku, kui see muutub.
+   Hetkel välja lülitatud (KALENDER = false): nuppe, hoiatust ega Info kaarti ei näidata. Server (?ics=1) töötab edasi. */
+const KALENDER = false;
+const kalSig = (ev, x) => ev.indexOf('ho-') === 0 ? x.sisse + '|' + x.valja : String(x.lahku || '');
+function kalHref(ev, koht) {
+  if (!D.url) return '';
+  return D.url + '?ics=1' + (VOTI ? '&k=' + encodeURIComponent(VOTI) : '') + (ev ? '&ev=' + ev : '') + (koht ? '&koht=' + koht : '');
+}
+/** Sõidud sama lahkumisajaga = üks kalendrisündmus. */
+const soitGrupp = t => D.soidud.filter(x => x.lahku && x.lahku === t.lahku && tripVisible(x));
+function kalBtn(ev, x) {
+  if (!KALENDER || !D.url || !(x.lahku || x.sisse)) return '';
+  const L = ev.indexOf('soit-') === 0 ? soitGrupp(x).map(t => ['soit-' + t.rida, t]) : [[ev, x]];
+  if (!L.length) L.push([ev, x]);
+  const evs = L.map(p => p[0]).join('.');
+  const k = L.every(p => kal[p[0]]), vana = L.some(p => kal[p[0]] && kal[p[0]] !== kalSig(p[0], p[1]));
+  return `<a class="calb ${vana ? 'vana' : k ? 'on' : ''}" href="${kalHref(evs)}" target="_blank" rel="noopener" data-act="kal" data-ev="${evs}" aria-label="${vana ? 'Uuenda kalendris' : 'Lisa kalendrisse'}">${vana ? '📅⟳' : k ? '📅✓' : '📅'}</a>`;
+}
+/** Kalendrisse lisatud sündmused, mille aeg on vahepeal muutunud. */
+function kalVanad() {
+  const o = [], n = now();
+  const nahtud = new Set();
+  D.soidud.forEach(t => {
+    const ev = 'soit-' + t.rida;
+    if (!(kal[ev] && kal[ev] !== kalSig(ev, t) && t.lahku > n) || nahtud.has(t.lahku)) return;
+    nahtud.add(t.lahku);
+    o.push({ ev: ev, x: t, nimi: '🚐 ' + soitGrupp(t).map(x => x.ylesanne).join(' + '), aeg: hm(t.lahku) });
+  });
+  D.hooldused.forEach(h => { const ev = 'ho-' + h.rida; if (kal[ev] && kal[ev] !== kalSig(ev, h) && h.valja > n) o.push({ ev: ev, x: h, nimi: '🔧 ' + (car(h.koht) || {}).nr + ' ' + h.nimi, aeg: h.sisseTxt + '–' + h.valjaTxt }); });
+  return o;
+}
+function kalWarn() {
+  if (!KALENDER) return '';
+  const v = kalVanad();
+  if (!v.length) return '';
+  return `<section class="card calwarn"><div class="pad">📅 Aeg muutus, kalendris on veel vana aeg. Vajuta 📅⟳, siis kalender uueneb.</div>${v.map(o => `<div class="rowi"><div class="s"><b>${esc(o.nimi)}</b><div class="small">uus aeg ${esc(o.aeg)}</div></div>${kalBtn(o.ev, o.x)}</div>`).join('')}</section>`;
+}
+
+/* ---- SEADED: selle telefoni valikud, auto seaded (Seaded read 5–7) ja üldised (Seaded B11/B12, Sõidud SEADED) */
+const SEA_TEKST = ['meeskond', 'auto', 'klass'];
+const SEA_AUTO = [
+  ['meeskond', 'Meeskond', 'Juht / Kaardilugeja', 'lai'], ['auto', 'Auto', 'nt BMW M3 E36'], ['klass', 'Klass', 'nt EMV6'],
+  ['rohkEes', 'Rõhk ees (bar)', 'hoolduse vaikimisi'], ['rohkTaga', 'Rõhk taga (bar)', 'hoolduse vaikimisi'],
+  ['lk', 'Kulu katsel (l/km)', 'nt 0,7'], ['yles', 'Kulu ülesõidul (l/km)', 'nt 0,2'],
+  ['varu', 'Kütuse varu (l)', 'hoiatus, kui jääb alla'], ['paak', 'Paagi maht (l)', '']
+];
+const SEA_YLD = [
+  ['viivitus', 'Viivitusvaru (min)', 'tulede arvutuseks: hilinemise varu'], ['hamarus', 'Hämarus (min)', 'enne loojangut / pärast tõusu']
+];
+const SEA_SOIT = [
+  ['kiirus', 'Keskmine kiirus (km/h)', 'mehaanikute sõit'], ['teetegur', 'Teetegur', 'tee km = linnulend × tegur'],
+  ['lisaaeg', 'Lisaaeg (min)', 'parkimine, tankimine'], ['puhver', 'Puhver (min)', 'lahku nii palju varem']
+];
+const seaVal = x => x === '' || x == null ? '' : String(x).replace('.', ',');
+function seaVali(id, defs, obj) {
+  return '<div class="seag">' + defs.map(d => `<label class="${d[3] || ''}">${esc(d[1])}<input class="inp" data-sea="${id}" data-m="${d[0]}" data-orig="${esc(seaVal(obj[d[0]]))}" value="${esc(seaVal(obj[d[0]]))}" ${SEA_TEKST.indexOf(d[0]) >= 0 ? 'maxlength="60"' : 'inputmode="decimal" maxlength="6"'} autocomplete="off">${d[2] ? `<span class="yh">${esc(d[2])}</span>` : ''}</label>`).join('') + '</div>';
+}
+function seaNupp(id) { return `<div class="seaso"><button class="btn dark" id="ss${id}" data-act="seasave" data-koht="${id}" disabled>Salvesta</button><span class="small mute" id="sm${id}">Muuda väärtust, siis Salvesta.</span></div>`; }
+function vSeaded() {
+  const S = D.seaded || {}, mc = minu && minu !== 'koik' ? car(minu) : null;
+  const tel = `<section class="card"><div class="sea" style="border-top:0"><div class="lbl">📱 Selle telefoni seaded</div>
+      <div class="small mute" style="margin-bottom:8px">Kehtivad ainult selles telefonis.</div>
+      <div class="seaq">${D.autod.length > 1 ? `<button class="btn ghost" data-act="minuvali">★ Minu auto: ${mc ? esc(mc.nr) + ' ' + esc(mc.lyhend) : minu === 'koik' ? 'mehaanik, kõik' : 'valimata'}</button>` : ''}
+        <button class="btn ghost" data-act="heli">${heli ? '🔔 Heli sees' : '🔕 Heli väljas'}</button></div></div></section>`;
+  const autod = carsF().map(a => `<section class="card car" style="${cvars(a)}">
+      <div class="chead"><span class="cnr">${esc(a.nr)}</span><span class="cname">${esc(a.meeskond || a.lyhend)}<small>Auto seaded · lühend ${esc(a.lyhend)}</small></span></div>
+      <div class="sea" style="border-top:0">${seaVali(a.koht, SEA_AUTO, a)}${seaNupp(a.koht)}
+        <div class="small mute" style="margin-top:6px">Stardinumbrit ja lühendit saab muuta ainult tabelis (leht Seaded), sest nende järgi seotakse logi ja hooldused.</div></div>
+    </section>`).join('');
+  const soit = S.soit && (S.soit.read || []).length ? `<div class="lbl" style="margin-top:14px">🚐 Mehaanikute sõiduajad</div>${seaVali(0, SEA_SOIT.filter(d => (S.soit.read || []).indexOf(d[0]) >= 0), S.soit)}` : '';
+  const yld = `<section class="card"><div class="sea" style="border-top:0"><div class="lbl">⚙ Üldised seaded · ${esc(D.ralli)}</div>
+      <div class="lbl" style="margin-top:4px">💡 Tuled</div>${seaVali(0, SEA_YLD, S)}${soit}${seaNupp(0)}
+      <div class="small mute" style="margin-top:6px">Muutus arvutab ajad, tuled ja sõidud kõigis telefonides ümber. Ralli nime ja arenduse tabelit saab muuta tabelis (Seaded B10, B13)${S.arendus ? ' · arenduse tabel seotud ✓' : ''}.</div></div></section>`;
+  return tel + `<div class="h2">Autod${filter === 'koik' ? '' : ' · ' + esc((car(filter) || {}).nr)}</div>` + autod + '<div class="h2">Üldised</div>' + yld + vTabKontroll();
+}
+/* ---- VALMISOLEKU KONTROLL: tabel enne rallit (koodid ajakavas, MEIE AEG, Kütus, veaväärtused). Ainult loeb. */
+let tabKontroll = null, tabKontrollTeel = false;
+function vTabKontroll() {
+  const T = tabKontroll, li = (x, c) => `<li class="${c}">${esc(x)}</li>`;
+  const tul = !T ? '' : T.viga ? `<ul>${li(T.viga, 'hot')}</ul>`
+    : !T.vead.length && !T.hoiatused.length ? `<ul><li class="ok">Kõik korras ✓ · ${esc(T.aeg)}</li></ul>`
+    : (T.vead.length ? `<div class="lbl" style="margin-top:8px">❌ Vead · ${T.vead.length}</div><ul>${T.vead.map(x => li(x, 'hot')).join('')}</ul>` : '')
+      + (T.hoiatused.length ? `<div class="lbl" style="margin-top:8px">⚠ Kontrolli · ${T.hoiatused.length}</div><ul>${T.hoiatused.map(x => li(x, '')).join('')}</ul>` : '')
+      + `<div class="small mute" style="margin-top:6px">Kontrollitud ${esc(T.aeg)}. Paranda tabelis ja kontrolli uuesti.</div>`;
+  return `<div class="h2">Enne rallit</div><section class="card" id="tabkontroll"><div class="dbs" style="border-top:0"><div class="lbl">✅ Valmisoleku kontroll</div>
+    <div class="small mute">Kontrollib tabeli: koodid ajakavas, Hoolduses, Kütuses ja Sõitudes, päeva esimese rea MEIE AEG, veaväärtused, eelmise ralli jäägid. Midagi ei muuda.</div>
+    <div class="dbbtn"><button class="btn dark" data-act="tabkontroll" ${tabKontrollTeel ? 'disabled' : ''}>${tabKontrollTeel ? 'Kontrollin…' : 'Kontrolli tabelit'}</button></div>${tul}</div></section>`;
+}
+
+/* ---- INFO */
+function vInfo() {
+  const n = now();
+  const tabs = [['soidud', 'Sõidud'], ['kontakt', 'Kontaktid'], ['kaasa', 'Kaasa'], ['debriif', 'Kokkuvõte'], ['seaded', '⚙ Seaded']];
+  const sec = [`<div class="toc">${tabs.map(t => `<button class="${infoTab === t[0] ? 'on' : ''}" data-act="itab" data-v="${t[0]}">${t[1]}</button>`).join('')}</div>`];
+  if (infoTab === 'soidud') {
+    if (KALENDER && D.url) {
+      const fa = filter !== 'koik' ? car(filter) : null;
+      const href = D.url + '?ics=1' + (VOTI ? '&k=' + encodeURIComponent(VOTI) : '') + (fa ? '&koht=' + fa.koht : '');
+      const tel = href.replace(/^https?:/, 'webcal:');
+      sec.push(`<section class="card pad cal"><div><b>📅 Telefoni kalendrisse</b><div class="small mute">Vajuta 📅 sõidu või hoolduse juures. Telefon tuletab meelde 10 min ette, ka siis, kui rakendus on kinni. Kui aeg muutub, läheb nupp punaseks 📅⟳: vajuta uuesti.</div></div>
+        <div class="calbtns"><a class="btn dark" href="${href}" target="_blank" rel="noopener" data-act="kalkoik">Lisa kõik${fa ? ' (' + esc(fa.nr) + ')' : ''}</a><a class="btn ghost" href="${tel}" data-act="kaltel">Kalender uueneb ise</a></div>
+        <details class="small mute" style="flex:1 1 100%"><summary>Mis on „Kalender uueneb ise“?</summary>Telefon lisab ralli eraldi kalendrina ja uuendab aegu ise. iPhone'is: Seaded → Kalender → Kontod → Tellitud kalender → Hangi uued andmed: iga 15 min. Androidi Google'i kalender uuendab harva (mõned korrad päevas), seal kasuta pigem nuppu 📅⟳.</details></section>`);
+    }
+    const all = D.soidud.filter(tripVisible).slice().sort((a, b) => (a.lahku || 0) - (b.lahku || 0));
+    const nPast = all.filter(t => t.lahku && t.lahku < n - 3 * MIN).length;
+    const tr = showPast ? all : all.filter(t => !(t.lahku && t.lahku < n - 3 * MIN));
+    const more = nPast ? `<button class="morebtn" data-act="past">${showPast ? 'Peida möödunud ▴' : 'Näita möödunud (' + nPast + ') ▾'}</button>` : '';
+    sec.push(`<div class="h2">Sõidud · millal lahkuda</div><section class="card">${showPast ? '' : more}${tr.map(t => {
+      const a = carByNr(t.nr);
+      return `<div class="rowi ${t.lahku && t.lahku < n ? 'past' : ''}" style="${cvars(a)}">
+        <div class="num" style="font-weight:900;font-size:20px;width:58px">${hm(t.lahku)}</div>
+        <div class="s"><b>${esc(t.ylesanne)}</b><div class="small mute">${esc(t.kust)} → ${esc(t.kuhu)}${t.soit ? ' · ' + esc(t.soit) + ' min' : ''}${t.kohal ? ' · kohal ' + hm(t.kohal) : ''}${t.markus ? ' · ' + esc(t.markus) : ''}</div></div>
+        ${t.lahku && t.lahku > n ? kalBtn('soit-' + t.rida, t) : ''}${t.kuhu ? `<a class="wz" href="${waze(t.kuhu)}" target="_blank" rel="noopener">Waze</a>` : ''}
+      </div>`;
+    }).join('') || '<div class="empty">Rohkem sõite pole.</div>'}${showPast ? more : ''}</section>`);
+    sec.push(`<div class="h2">Kohad</div><section class="card">${D.kohad.map(p => `<div class="rowi"><div class="s"><b>${esc(p.nimi)}</b><div class="small mute">${esc(p.aadress)}</div></div><a class="wz" href="${waze(p.nimi)}" target="_blank" rel="noopener">Waze</a></div>`).join('')}</section>`);
+  } else if (infoTab === 'kontakt') {
+    const k = D.info.find(s => s.pealkiri === 'KONTAKTID');
+    if (k) sec.push(`<div class="h2">Kontaktid</div><section class="card">${k.read.map(r => {
+      const tel = (r[1] || '').replace(/[^\d+]/g, '');
+      return `<div class="rowi"><div class="s"><b>${esc(r[0])}</b><div class="small mute">${esc(r[2])}</div></div>${tel.length > 5 ? `<a class="tel num" href="tel:${tel}">${esc(r[1])}</a>` : `<span class="mute small">${esc(r[1])}</span>`}</div>`;
+    }).join('')}</section>`);
+    D.info.filter(s => s.pealkiri !== 'KONTAKTID').forEach(s => {
+      sec.push(`<div class="h2">${esc(s.pealkiri)}</div><section class="card"><dl>${s.read.map(r => `<div><dt>${esc(r[0])}</dt><dd>${esc(r[1])}</dd></div>`).join('')}</dl></section>`);
+    });
+  } else if (infoTab === 'debriif') {
+    sec.push(vDebriif());
+  } else if (infoTab === 'seaded') {
+    sec.push(vSeaded());
+  } else {
+    sec.push(vKaasa());
+  }
+  return sec.join('');
+}
+function lastSS(a) {
+  if (!a) return '';
+  const n = now(), ss = (D.ajakavad[a.koht] || []).filter(r => r.tyyp === 'SS' && r.t);
+  const p = ss.filter(r => r.t <= n);
+  return (p.length ? p[p.length - 1] : ss[0] || {}).akp || '';
+}
+function vKaasa() {
+  const cs = carsF();
+  let ol = 0, ko = 0;
+  const parts = [];
+  D.kaasa.forEach(x => {
+    if (x.sektsioon) {
+      const lisa = /LISA SIIA/i.test(x.sektsioon);
+      const nimed = cs.map(a => x.nimed[a.koht - 1] ? `${esc(a.nr)}: ${esc(x.nimed[a.koht - 1])}` : '').filter(Boolean).join(' · ');
+      parts.push(`<div class="ksec">${lisa ? 'Lisatud asjad' : esc(x.sektsioon)}${nimed ? `<small>${nimed}</small>` : ''}</div>`);
+      return;
+    }
+    let tg;
+    if (x.yhine) {
+      ko++; if (x.v[0]) ol++;
+      tg = `<button class="tg ${x.v[0] ? 'on' : ''}" style="--cc:var(--ok)" data-act="kaasa" data-rida="${x.rida}" data-veerg="1" data-v="${!x.v[0]}">${x.v[0] ? '✓ ' : ''}ühine</button>`;
+    } else {
+      tg = cs.map(a => {
+        const v = x.v[a.koht - 1];
+        if (v === null) return '';
+        ko++; if (v) ol++;
+        if (D.autod.length === 1) return `<button class="tg cbx ${v ? 'on' : ''}" style="--cc:var(--ok)" data-act="kaasa" data-rida="${x.rida}" data-veerg="${a.koht}" data-v="${!v}" aria-label="olemas">${v ? '✓' : ''}</button>`;
+        return `<button class="tg ${v ? 'on' : ''}" style="${cvars(a)}" data-act="kaasa" data-rida="${x.rida}" data-veerg="${a.koht}" data-v="${!v}">${v ? '✓ ' : ''}${esc(a.nr)}</button>`;
+      }).join('');
+    }
+    if (x.rida < 0) tg = '<span class="small mute">⏳ ootel</span>';
+    parts.push(`<div class="kitem"><span class="s">${esc(x.nimi)}</span>${tg}</div>`);
+  });
+  return `<div class="h2">Kaasa · olemas ${ol} / ${ko}</div><section class="card">${parts.join('')}
+    <div class="form"><div class="frow"><input class="inp" id="kaNew" maxlength="120" placeholder="Uus asi, nt „lisapirn“"><button class="btn dark" style="flex:none" data-act="addkaasa">Lisa</button></div></div>
+  </section>`;
+}
+
+/* ------------------------------------------------------------ taimer */
+function tick(force) {
+  const n = now();
+  $('#clock').textContent = fmtTs ? fmtTs.format(new Date(n)) : '';
+  document.querySelectorAll('[data-cd]').forEach(el => {
+    const t = Number(el.dataset.cd), d = t - n;
+    el.textContent = d <= 0 ? (el.dataset.now || '0:00') : dur(d);
+    const l = document.querySelector(`[data-cdl="${t}"]`);
+    if (l) l.textContent = d <= 0 ? '' : durLbl(d);
+  });
+  document.querySelectorAll('[data-urg]').forEach(el => {
+    const d = Number(el.dataset.urg) - n;
+    el.classList.toggle('u0', d <= 0 && d > -3 * MIN);
+    el.classList.toggle('u5', d > 0 && d <= 5 * MIN);
+    el.classList.toggle('u10', d > 5 * MIN && d <= 10 * MIN);
+  });
+  status();
+  if (!force && n >= nextB) render();
+  alarms(n);
+}
+function status() {
+  const el = $('#status');
+  if (!el) return;
+  const q = Q.length ? ' · ⏳ ' + Q.length + ' muudatus' + (Q.length > 1 ? 't' : '') + ' ootab saatmist' : '';
+  if (!lastOk) { el.textContent = lastErr ? '⚠ ' + lastErr : 'Laen…'; el.className = 'status' + (lastErr ? ' bad' : ''); return; }
+  const age = Math.round((Date.now() - lastOk) / 1000);
+  if (age > 90 || lastErr) { el.textContent = '⚠ Pole ühendust — andmed ' + durShort(age * 1000) + ' vanad. Taimer käib edasi.' + q; el.className = 'status bad'; }
+  else { el.textContent = 'Uuendatud ' + (age < 5 ? 'just praegu' : age + ' s tagasi') + ' · uueneb ise' + q; el.className = 'status' + (q ? ' pend' : ''); }
+}
+
+/* ------------------------------------------------------------ hoiatused */
+function alarms(n) {
+  if (!D) return;
+  const ev = [];
+  const up = D.soidud.filter(t => t.lahku && tripVisible(t) && t.lahku > n - MIN).sort((a, b) => a.lahku - b.lahku);
+  if (up[0]) ev.push({ k: 'trip' + up[0].lahku, t: up[0].lahku, txt: 'Lahku: ' + up[0].ylesanne + (up[0].kuhu ? ' → ' + up[0].kuhu : '') });
+  carsF().forEach(a => D.hooldused.filter(h => h.koht === a.koht && h.sisse <= n && n < h.valja + MIN)
+    .forEach(h => ev.push({ k: 'out' + h.rida, t: h.valja, txt: a.nr + ' ' + h.nimi + ' OUT ' + h.valjaTxt })));
+  ev.forEach(e => [10, 5, 0].forEach(th => {
+    const d = e.t - n, key = e.k + '|' + th;
+    if (d <= th * MIN && d > th * MIN - 90000 && !fired.has(key)) {
+      fired.add(key);
+      alarm(th === 0 ? 'NÜÜD' : th + ' min', e.txt, th);
+    }
+  }));
+}
+function alarm(a1, a2, th, ic, nupp) {
+  alarmSig = null;   // signaali häire paneb selle pärast uuesti; ajahäire „Selge“ ei tohi signaali kinnitada
+  if (heli) {
+    beep(th === 0 ? 3 : th === 5 ? 2 : 1);
+    try { navigator.vibrate && navigator.vibrate(th === 0 ? [400, 150, 400, 150, 400] : [250, 120, 250]); } catch (e) {}
+  }
+  const el = $('#alarm');
+  el.innerHTML = `<div style="font-size:52px">${ic || '⏰'}</div><div class="a1">${esc(a1)}</div><div class="a2">${esc(a2)}</div><button data-act="alarmok">${esc(nupp || 'Selge')}</button>`;
+  el.hidden = false;
+}
+function beep(times) {
+  if (!audio) return;
+  try {
+    for (let i = 0; i < times; i++) {
+      const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime + i * 0.45;
+      o.frequency.value = 880; o.type = 'square';
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.4, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.35);
+      o.connect(g).connect(audio.destination); o.start(t); o.stop(t + 0.4);
+    }
+  } catch (e) {}
+}
+async function wakeOn() {
+  try { if (navigator.wakeLock) wake = await navigator.wakeLock.request('screen'); } catch (e) { wake = null; }
+}
+
+/* ------------------------------------------------------------ toast */
+let toastT = null;
+function toast(msg, bad) {
+  const el = $('#toast');
+  el.textContent = msg; el.className = 'show' + (bad ? ' bad' : '');
+  clearTimeout(toastT); toastT = setTimeout(() => el.className = '', bad ? 4500 : 1800);
+}
+
+/* ------------------------------------------------------------ sündmused */
+document.addEventListener('click', e => {
+  const nb = e.target.closest('nav button');
+  if (nb) { view = nb.dataset.view; LS.set('view', view); scrollNext = true; window.scrollTo(0, 0); render(); return; }
+  const b = e.target.closest('[data-act]');
+  if (!b) return;
+  const act = b.dataset.act, ds = b.dataset;
+  if (act === 'filter') { filter = ds.v; LS.set('filter', filter); if (filter !== 'koik') { ajAuto = Number(filter); LS.set('ajAuto', ajAuto); } scrollNext = true; render(); }
+  else if (act === 'ajauto') { ajAuto = Number(ds.koht); LS.set('ajAuto', ajAuto); scrollNext = true; render(); }
+  else if (act === 'svc') {
+    const v = ds.v === 'true';
+    save('setServiceDone', [Number(ds.rida), v], v ? 'Hooldus märgitud tehtuks ✓' : 'Märge eemaldatud');
+  }
+  else if (act === 'log') {
+    const v = ds.v === 'true';
+    save('setLogDone', [Number(ds.koht), Number(ds.rida), v], v ? 'Tehtud ✓' : 'Märge eemaldatud');
+  }
+  else if (act === 'rohk') {
+    const r = ds.rida, pe = $('#pe' + r), pt = $('#pt' + r);
+    const f = x => x.value.trim().replace(',', '.');
+    pe.blur(); pt.blur();
+    const bad = [f(pe), f(pt)].find(x => x !== '' && (isNaN(Number(x)) || Number(x) < 0.5 || Number(x) > 5));
+    if (bad !== undefined) { toast('Rõhk peab olema 0.5–5 bar', true); return; }
+    save('setPressure', [Number(r), f(pe), f(pt)], 'Rõhud salvestatud ✓');
+  }
+  else if (act === 'addlog') {
+    const ta = $('#lgTx'), t = ta.value.trim();
+    if (!t) { ta.focus(); toast('Kirjuta enne, mida vaja', true); return; }
+    ta.value = ''; ta.blur();
+    save('addLog', [Number(ds.koht), t], 'Lisatud logisse ✓');
+  }
+  else if (act === 'addidee') {
+    const ta = $('#idTx'), t = ta.value.trim();
+    if (!t) { ta.focus(); toast('Kirjuta enne, mis idee või mure on', true); return; }
+    ta.value = ''; ta.blur();
+    save('addIdee', [Number(ds.koht), ideeLiik, t], (ideeLiik === 'Mure' ? 'Mure' : 'Idee') + ' lisatud rallide vahele ✓');
+  }
+  else if (act === 'ideeliik') { const ta = $('#idTx'), keep = ta ? ta.value : ''; ideeLiik = ds.v; render(); const t2 = $('#idTx'); if (t2) t2.value = keep; }
+  else if (act === 'aegedit') { editAeg = editAeg === ds.k ? null : ds.k; render(); const i = $('#aegIn'); if (i) { i.focus(); i.select(); } }
+  else if (act === 'aegcancel') { editAeg = null; const i = $('#aegIn'); if (i) i.blur(); render(); }
+  else if (act === 'aegsave') {
+    const i = $('#aegIn'), v = hhmm(i && i.value);
+    if (!v) { toast('Sisesta aeg 24 h kujul, nt 19:14', true); if (i) i.focus(); return; }
+    editAeg = null; if (i) i.blur();
+    save('setAeg', [Number(ds.koht), Number(ds.rida), v], 'Aeg muudetud ✓ — järgmised ajad nihkusid');
+  }
+  else if (act === 'kyedit') { editKy = editKy === ds.k ? null : ds.k; editAeg = null; render(); const i = $('#kyIn'); if (i) { i.focus(); i.select(); } }
+  else if (act === 'kycancel') { editKy = null; const i = $('#kyIn'); if (i) i.blur(); render(); }
+  else if (act === 'kysave' || act === 'kyclear') {
+    const i = $('#kyIn'), v = act === 'kyclear' ? '' : (i && i.value || '').trim().replace(',', '.');
+    if (act === 'kysave' && (v === '' || isNaN(Number(v)) || Number(v) < 0 || Number(v) > 200)) { toast('Sisesta liitrid, nt 28', true); if (i) i.focus(); return; }
+    editKy = null; if (i) i.blur();
+    save('setKytus', [Number(ds.koht), ds.rz, v], v === '' ? 'Kustutatud' : 'Tangitud ' + v + ' l ✓');
+  }
+  else if (act === 'aegadj') {
+    const i = $('#aegIn'), v = hhmm(i && i.value);
+    if (!i || !v) return;
+    const m = (Number(v.slice(0, 2)) * 60 + Number(v.slice(3)) + Number(ds.d) + 1440) % 1440;
+    i.value = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  }
+  else if (act === 'aegplaan') {
+    editAeg = null; const i = $('#aegIn'); if (i) i.blur();
+    save('setAeg', [Number(ds.koht), Number(ds.rida), ''], 'Tagasi plaani aja peale ✓');
+  }
+  else if (act === 'gotolog') { view = 'logi'; LS.set('view', view); logAuto = Number(ds.koht); LS.set('logAuto', logAuto); if (filter !== 'koik' && filter !== ds.koht) { filter = ds.koht; LS.set('filter', filter); } focusAfter = 'lgTx'; render(); }
+  else if (act === 'logauto') { const ta = $('#lgTx') || $('#kTx') || $('#idTx'), keep = ta ? ta.value : ''; if (ta) ta.blur(); logAuto = Number(ds.koht); LS.set('logAuto', logAuto); render(); const t2 = $('#lgTx'); if (t2) t2.value = keep; }
+  else if (act === 'svcopen') { openSvc.add(Number(ds.rida)); render(); }
+  else if (act === 'svcclose') { openSvc.delete(Number(ds.rida)); render(); }
+  else if (act === 'past') { showPast = !showPast; render(); }
+  else if (act === 'kaasa') {
+    const v = ds.v === 'true';
+    save('setKaasa', [Number(ds.rida), Number(ds.veerg), v], v ? 'Olemas ✓' : 'Märge eemaldatud');
+  }
+  else if (act === 'addkaasa') {
+    const i = $('#kaNew'), t = i.value.trim(); if (!t) { i.focus(); return; }
+    i.value = ''; i.blur(); save('addKaasa', [t], 'Lisatud ✓');
+  }
+  else if (act === 'katseopen') { editKatse = editKatse === ds.k ? null : ds.k; editAeg = null; editKy = null; render(); const i = $('#kTx'); if (i) i.focus(); }
+  else if (act === 'katsemuuda') { const r = Number(ds.rida); muudaKatse = muudaKatse === r ? null : r; kustutaKatse = null; render(); const i = $('#kmTx'); if (i) i.focus(); }
+  else if (act === 'katsemuudacancel') { muudaKatse = null; kustutaKatse = null; const i = $('#kmTx'); if (i) i.blur(); render(); }
+  else if (act === 'katsesave') {
+    const r = Number(ds.rida), x = D.katsed.find(y => y.rida === r), i = $('#kmTx'), t = i ? i.value.trim() : '';
+    if (!x) return; if (!t) { i.focus(); toast('Tekst ei saa olla tühi. Eemaldamiseks vajuta 🗑 Eemalda', true); return; }
+    const oht = $('#kmOht').checked; i.blur(); muudaKatse = null;
+    if (t === x.info && oht === x.oht) { render(); return; }
+    save('setKatse', [r, x.info, t, oht], 'Katseinfo muudetud ✓');
+  }
+  else if (act === 'katsedel') {
+    const r = Number(ds.rida), x = D.katsed.find(y => y.rida === r); if (!x) return;
+    if (kustutaKatse !== r) { kustutaKatse = r; const i = $('#kmTx'), v = i ? i.value : ''; if (i) i.blur(); render(); const j = $('#kmTx'); if (j) j.value = v; return; }
+    const i = $('#kmTx'); if (i) i.blur(); muudaKatse = null; kustutaKatse = null;
+    save('delKatse', [r, x.info], 'Katseinfo eemaldatud');
+  }
+  else if (act === 'katsecancel') { editKatse = null; const i = $('#kTx'); if (i) i.blur(); render(); }
+  else if (act === 'addkatse') {
+    const t = $('#kTx').value.trim(); if (!t) { $('#kTx').focus(); toast('Kirjuta, mis seal on', true); return; }
+    const args = [ds.nr || $('#kNr').value, ds.lk || $('#kLk').value, t, $('#kOht').checked];   // Ajakava: data-lk; Logi: valik #kLk
+    $('#kTx').value = ''; $('#kTx').blur(); editKatse = null;
+    save('addKatse', args, 'Katseinfo lisatud ✓');
+  }
+  else if (act === 'itab') { infoTab = ds.v; LS.set('infoTab', infoTab); window.scrollTo(0, 0); render(); }
+  else if (act === 'scroll') { const el = document.getElementById(ds.id); if (el) el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  else if (act === 'heli') {
+    heli = !heli;
+    const bl = $('#bell'); bl.classList.toggle('on', heli); bl.textContent = heli ? '🔔' : '🔕';
+    if (b !== bl) render();
+    if (heli) {
+      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume && audio.resume(); } catch (e) {}
+      beep(1); wakeOn();
+      toast('Heli sees: piiks 10 / 5 / 0 min enne lahkumist ja OUT-i. Ekraan jääb põlema, kui telefon lubab.');
+    } else { try { wake && wake.release(); } catch (e) {} wake = null; toast('Heli väljas'); }
+  }
+  else if (act === 'alarmok') {
+    $('#alarm').hidden = true;
+    if (alarmSig) { const x = alarmSig; alarmSig = null; save('nahtudSignaal', [x.nr, x.t], '👁 Kinnitatud: ' + x.nr + ' näeb, et nägite'); }
+  }
+  else if (act === 'signahtud') save('nahtudSignaal', [ds.nr, Number(ds.t)], '👁 Kinnitatud: ' + ds.nr + ' näeb, et nägite');
+  else if (act === 'logtab') { const ta = $('#lgTx') || $('#idTx'); if (ta) ta.blur(); logTab = ds.v; LS.set('logTab', logTab); window.scrollTo(0, 0); render(); }
+  else if (act === 'kal') {
+    let vana = false;
+    ds.ev.split('.').forEach(ev => {
+      const t = D.soidud.find(x => 'soit-' + x.rida === ev) || D.hooldused.find(x => 'ho-' + x.rida === ev);
+      if (t) { vana = vana || !!kal[ev]; kal[ev] = kalSig(ev, t); }
+    });
+    LS.set('kal', kal); setTimeout(render, 300); toast(vana ? 'Ava fail, siis kalendris olev sündmus uueneb' : 'Ava fail ja lisa kalendrisse');
+    return;
+  }
+  else if (act === 'kalkoik') {
+    D.soidud.forEach(t => { if (t.lahku > now()) kal['soit-' + t.rida] = kalSig('soit-', t); });
+    D.hooldused.forEach(h => { if (h.valja > now() && (filter === 'koik' || String(h.koht) === filter)) kal['ho-' + h.rida] = kalSig('ho-', h); });
+    LS.set('kal', kal); setTimeout(render, 300); return;
+  }
+  else if (act === 'kaltel') return;
+  else if (act === 'sigopen') { const k = Number(ds.koht); sigOpen = sigOpen && sigOpen.koht === k && sigOpen.sg === ds.sg ? null : { koht: k, sg: ds.sg }; if (!sigOpen || ds.sg === 'OK') sigGeo = null; render(); if (sigOpen && ds.sg === 'KATKESTASIME' && !(sigGeo && sigGeo.st !== 'viga')) geoStart(); const i = $('#sgTx'); if (i && ds.sg !== 'OK') i.focus(); }
+  else if (act === 'geo') geoStart();
+  else if (act === 'seasave') {
+    const id = ds.koht, v = {}, I = [...document.querySelectorAll('[data-sea="' + id + '"]')];
+    I.forEach(i => { if (i.value.trim() !== i.dataset.orig) v[i.dataset.m] = i.value.trim(); });
+    const vale = I.find(i => i.dataset.m in v && SEA_TEKST.indexOf(i.dataset.m) < 0 && !/^\d+([.,]\d+)?$/.test(v[i.dataset.m]));
+    if (vale) { vale.focus(); toast('Sisesta number, nt 0,7', true); return; }
+    if (!Object.keys(v).length) return;
+    I.forEach(i => i.blur());
+    save('setSeaded', [Number(id), v], 'Seaded salvestatud ✓');
+  }
+  else if (act === 'sigshow') { sigShow.add(Number(ds.koht)); render(); }
+  else if (act === 'minu') {
+    minu = ds.v; minuValik = false; LS.set('minu', minu);
+    filter = minu; LS.set('filter', filter); if (minu !== 'koik') { ajAuto = Number(minu); LS.set('ajAuto', ajAuto); logAuto = Number(minu); LS.set('logAuto', logAuto); }
+    window.scrollTo(0, 0); render(); toast(minu === 'koik' ? 'Mehaaniku vaade: kõik autod' : '★ ' + (car(minu) || {}).nr + ' on nüüd selle telefoni auto');
+  }
+  else if (act === 'minuvali') { minuValik = true; view = 'nyyd'; LS.set('view', view); window.scrollTo(0, 0); render(); }
+  else if (act === 'sigtyh') {
+    const key = ds.nr + '|' + ds.t;
+    if (sigTyh !== key) { sigTyh = key; render(); setTimeout(() => { if (sigTyh === key) { sigTyh = null; render(); } }, 8000); return; }
+    sigTyh = null; save('tyhistaSignaal', [ds.nr, Number(ds.t)], 'Signaal tühistatud ✓');
+  }
+  else if (act === 'sigcancel') { sigOpen = null; sigGeo = null; const i = $('#sgTx'); if (i) i.blur(); render(); }
+  else if (act === 'sigsend') {
+    const i = $('#sgTx'), t = i ? i.value.trim() : '', kus = $('#sgKus') ? $('#sgKus').value : '', x = car(ds.koht);
+    if (ds.sg === 'PROBLEEM' && !t) { if (i) i.focus(); toast('Kirjuta lühidalt, mis viga', true); return; }
+    const gl = sigGeo && sigGeo.st === 'ok' ? sigGeo : null;
+    sigOpen = null; sigGeo = null; if (i) i.blur();
+    if (x) { sigMine.push(x.nr + '|' + ds.sg + '|' + kus); sigSaadetud.push({ nr: x.nr, sg: ds.sg, kus: kus, at: now() }); LS.set('sigSaadetud', sigSaadetud.slice(-20)); }
+    save('addSignaal', gl ? [Number(ds.koht), kus, ds.sg, t, gl.ll, gl.tapsus] : [Number(ds.koht), kus, ds.sg, t], SIG[ds.sg][0] + ' ' + SIG[ds.sg][1] + ' saadetud mehaanikutele');
+  }
+  else if (act === 'kontroll') {
+    const r = Number(ds.rida), h = D.hooldused.find(x => x.rida === r); if (!h) return;
+    const L = (h.kontroll || []).filter(m => m !== ds.mis); if (ds.v === 'true') L.push(ds.mis);
+    kPend[r] = (D.kontroll || []).filter(m => L.indexOf(m) >= 0); kOver(); render();
+    clearTimeout(kTimer[r]); kTimer[r] = setTimeout(() => kSend(r), 1500);
+  }
+  else if (act === 'dbprint') { try { window.print(); } catch (e) { toast('Printimine ei õnnestunud', true); } }
+  else if (act === 'pwavoti') {
+    // link (…/#k=…&a=…) või ainult võti → räsi; pwaSeaded() kontrollib ja salvestab selle uuel laadimisel
+    const t = ($('#pwaK') || {}).value || '', i = t.indexOf('#'), r = (i >= 0 ? t.slice(i + 1) : /(^|&)k=/.test(t) ? t : 'k=' + t).trim();
+    if (!/(^|&)k=[\w-]{4,}/.test(r)) { toast('Kleebi kogu link või võti', true); return; }
+    location.hash = r; location.reload();
+  }
+  else if (act === 'ajalukku') {
+    if (ajaluguTeel) return;
+    if (!ajaluguKinnita) { ajaluguKinnita = true; render(); setTimeout(() => { if (ajaluguKinnita) { ajaluguKinnita = false; render(); } }, 8000); return; }
+    ajaluguKinnita = false; ajaluguTeel = true; render();
+    call('lopetaRalli').then(j => { ajaluguTeel = false; apply(j); toast('Ajalukku salvestatud ✓'); })
+      .catch(e => { ajaluguTeel = false; render(); toast('Ei salvestunud: ' + String(e).replace(/^(Exception|Error):\s*/, ''), true); });
+  }
+  else if (act === 'tabkontroll') {
+    if (tabKontrollTeel) return;
+    tabKontrollTeel = true; render();
+    const rid = D.rid;   // ralli võib vahepeal vahetuda: vana ralli tulemust uue alla ei näita
+    call('kontrolliTabel').then(j => {
+      tabKontrollTeel = false;
+      if (D.rid !== rid) { render(); return; }
+      tabKontroll = typeof j === 'string' ? JSON.parse(j) : j; render();
+      toast(tabKontroll.vead.length ? 'Leitud ' + tabKontroll.vead.length + ' viga' : 'Kontroll tehtud ✓', tabKontroll.vead.length > 0);
+    }).catch(e => { tabKontrollTeel = false; if (D.rid !== rid) { render(); return; } tabKontroll = { viga: 'Kontroll ebaõnnestus: ' + String(e).replace(/^(Exception|Error):\s*/, '') }; render(); });
+  }
+  else if (act === 'dbshare') {
+    const t = dbText();
+    const kuva = () => { dbTekst = t; render(); const x = $('#dbTx'); if (x) { x.focus(); x.select(); } };
+    const kopeeri = () => navigator.clipboard && navigator.clipboard.writeText ? navigator.clipboard.writeText(t).then(() => toast('Kopeeritud — kleebi WhatsAppi või Messengeri'), kuva) : kuva();
+    if (navigator.share) navigator.share({ title: D.ralli + ' · kokkuvõte', text: t }).catch(e => { if (!e || e.name !== 'AbortError') kopeeri(); });
+    else kopeeri();
+  }
+});
+document.addEventListener('change', e => {
+  if (e.target.id !== 'kNr') return;
+  const a = carByNr(e.target.value), lk = lastSS(a), s = $('#kLk');
+  if (s && lk) s.value = lk;
+});
+function hhmm(x) {
+  const d = String(x || '').replace(/\D/g, '');
+  if (d.length < 3 || d.length > 4) return '';
+  const h = Number(d.slice(0, d.length - 2)), m = Number(d.slice(-2));
+  if (h > 23 || m > 59) return '';
+  return String(h).padStart(2, '0') + ':' + String(m).padStart(2, '0');
+}
+document.addEventListener('input', e => {
+  if (e.target.id === 'aegIn') {
+    const d = e.target.value.replace(/\D/g, '').slice(0, 4);
+    e.target.value = d.length > 2 ? d.slice(0, 2) + ':' + d.slice(2) : d;
+    return;
+  }
+  const sid = e.target.dataset && e.target.dataset.sea;
+  if (sid !== undefined) {
+    const muutus = [...document.querySelectorAll('[data-sea="' + sid + '"]')].some(i => i.value.trim() !== i.dataset.orig);
+    const b = $('#ss' + sid), m = $('#sm' + sid); if (b) b.disabled = !muutus; if (m) m.textContent = muutus ? 'Muudetud, salvestamata' : 'Muuda väärtust, siis Salvesta.';
+    return;
+  }
+  const r = e.target.dataset && e.target.dataset.pr;
+  if (!r) return;
+  const pe = $('#pe' + r), pt = $('#pt' + r), s = $('#ps' + r);
+  s.hidden = pe.value === pe.dataset.orig && pt.value === pt.dataset.orig;
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.id === 'kyIn') { e.preventDefault(); const b = document.querySelector('[data-act="kysave"]'); if (b) b.click(); }
+  if (e.key === 'Enter' && e.target.id === 'aegIn') { e.preventDefault(); const b = document.querySelector('[data-act="aegsave"]'); if (b) b.click(); }
+  if (e.key === 'Enter' && e.target.id === 'kaNew') { e.preventDefault(); document.querySelector('[data-act="addkaasa"]').click(); }
+  if (e.key === 'Enter' && e.target.id === 'kmTx') { e.preventDefault(); const b = document.querySelector('[data-act="katsesave"]'); if (b) b.click(); }
+  if (e.key === 'Enter' && e.target.id === 'kTx') { e.preventDefault(); const b = document.querySelector('[data-act="addkatse"]'); if (b) b.click(); }
+  if (e.key === 'Enter' && e.target.id === 'sgTx') { e.preventDefault(); const b = document.querySelector('[data-act="sigsend"]'); if (b) b.click(); }
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.pr) { e.preventDefault(); $('#ps' + e.target.dataset.pr).click(); }
+});
+document.addEventListener('focusout', () => setTimeout(() => {
+  const ae = document.activeElement;
+  if (pending && !(ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) render();
+}, 300));
+document.addEventListener('visibilitychange', () => { if (document.hidden) kSendAll(); else { load(); if (heli) wakeOn(); } });
+
+setInterval(() => tick(false), 1000);
+setInterval(() => { if (!document.hidden) load(); }, 30000);
+setInterval(() => { if (Q.length && !flushing) flush(); }, 15000);
+window.addEventListener('online', () => { load(); flush(); });
+(function () {
+  const snap = LS.get('snap', null);
+  if (snap && snap.json) { try { apply(snap.json, snap.at); } catch (e) {} }
+})();
+load();
+setTimeout(() => { const l = document.querySelector('#main .loading'); if (!D && l) l.textContent = 'Laen andmeid… tabel arvutab veel, see võib võtta kuni minuti.'; }, 10000);
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(function () {});</script>
+</body>
+</html>
